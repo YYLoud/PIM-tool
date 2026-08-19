@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7YC6KZ48PL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7YC6KZ48PL');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGS Beers Criteria 2023 — 老年潛在不適當用藥查詢 PIM Lookup</title>
+<style>
+:root{
+  --ink:#1b2733;          /* deep slate ink */
+  --ink-soft:#46586a;
+  --paper:#f7f8f6;        /* cool paper */
+  --card:#ffffff;
+  --line:#dde3e0;
+  --teal:#0e6e63;         /* primary accent — formulary teal */
+  --teal-soft:#e3f0ee;
+  --avoid:#b3261e;        /* T1 avoid */
+  --avoid-bg:#fbeeed;
+  --disease:#c4530a;      /* T2 disease-conditional */
+  --disease-bg:#fdf1e7;
+  --caution:#9a7b0a;      /* T3 caution */
+  --caution-bg:#faf4dd;
+  --ddi:#5b3fa8;          /* T4 drug–drug */
+  --ddi-bg:#efeaf9;
+  --renal:#1d5fa7;        /* T5 kidney */
+  --renal-bg:#e8f1fb;
+  --ok:#1d7a3e;
+  --ok-bg:#e9f5ec;
+  --radius:14px;
+  font-size:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Avenir Next","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  background:linear-gradient(135deg,#0c3d38 0%,#0e6e63 70%,#15847a 100%);
+  color:#f2f7f5;padding:22px 18px 18px;
+}
+.hwrap{max-width:980px;margin:0 auto}
+.kicker{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;opacity:.78;font-weight:600}
+h1{font-size:1.45rem;font-weight:700;letter-spacing:.01em;margin-top:4px}
+h1 .en{display:block;font-size:.86rem;font-weight:500;opacity:.82;letter-spacing:.04em;margin-top:2px}
+.tabs{max-width:980px;margin:0 auto;display:flex;gap:8px;padding:14px 18px 0}
+.tab{
+  flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:12px 12px 0 0;
+  border-bottom:none;padding:11px 8px;font-size:.95rem;font-weight:650;color:var(--ink-soft);
+  cursor:pointer;text-align:center;font-family:inherit;
+}
+.tab.active{color:var(--teal);border-color:var(--teal);background:#fff;box-shadow:inset 0 3px 0 var(--teal)}
+main{max-width:980px;margin:0 auto;padding:18px 18px 60px}
+.panel{display:none}
+.panel.active{display:block}
+.searchbox{
+  display:flex;gap:10px;align-items:stretch;background:var(--card);border:1.5px solid var(--line);
+  border-radius:var(--radius);padding:8px;box-shadow:0 1px 4px rgba(27,39,51,.05);
+}
+.searchbox input{
+  flex:1;border:none;outline:none;font-size:1.08rem;padding:8px 10px;font-family:inherit;background:transparent;
+}
+.btn{
+  border:none;border-radius:10px;background:var(--teal);color:#fff;font-weight:650;font-size:.95rem;
+  padding:10px 18px;cursor:pointer;font-family:inherit;
+}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:var(--teal-soft);color:var(--teal)}
+.btn.small{padding:6px 12px;font-size:.85rem;border-radius:8px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:8px 4px 0}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{
+  border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:.9rem;
+  cursor:pointer;font-family:inherit;color:var(--ink);
+}
+.chip b{color:var(--teal)}
+.chip:hover{border-color:var(--teal)}
+.results{margin-top:18px;display:flex;flex-direction:column;gap:14px}
+.drughead{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 2px 2px;
+}
+.drughead .gname{font-size:1.25rem;font-weight:750;letter-spacing:.01em}
+.drughead .alias{font-size:.85rem;color:var(--ink-soft)}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;display:flex;box-shadow:0 1px 4px rgba(27,39,51,.04);
+}
+.spine{width:7px;flex:none}
+.cbody{padding:13px 16px 14px;flex:1;min-width:0}
+.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.tbadge{
+  font-size:.7rem;font-weight:750;letter-spacing:.06em;border-radius:6px;padding:2px 8px;color:#fff;
+}
+.condbadge{font-size:.74rem;font-weight:650;border-radius:6px;padding:2px 8px}
+.rec{font-size:1rem;font-weight:700;margin:2px 0 1px}
+.rec-zh{font-size:.97rem;font-weight:650;color:var(--ink);margin-bottom:6px}
+.why{font-size:.86rem;color:var(--ink-soft);margin-bottom:2px}
+.why+.why{margin-top:3px}
+.meta{font-size:.74rem;color:var(--ink-soft);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+.meta b{color:var(--ink)}
+.lvl-avoid .spine{background:var(--avoid)} .lvl-avoid .tbadge{background:var(--avoid)}
+.lvl-disease .spine{background:var(--disease)} .lvl-disease .tbadge{background:var(--disease)}
+.lvl-caution .spine{background:var(--caution)} .lvl-caution .tbadge{background:var(--caution)}
+.lvl-ddi .spine{background:var(--ddi)} .lvl-ddi .tbadge{background:var(--ddi)}
+.lvl-renal .spine{background:var(--renal)} .lvl-renal .tbadge{background:var(--renal)}
+.lvl-ok .spine{background:var(--ok)} .lvl-ok .tbadge{background:var(--ok)}
+.lvl-disease .condbadge{background:var(--disease-bg);color:var(--disease)}
+.srcb{font-size:.68rem;font-weight:750;border:1.5px solid;border-radius:6px;padding:1px 8px;letter-spacing:.02em}
+.srcb.ags{color:var(--teal);border-color:#9cc8c2;background:#f2f8f7}
+.srcb.tw{color:#b3541e;border-color:#e3b78f;background:#fdf4ec}
+.srcchip{font-weight:650;color:var(--ink-soft)}
+.srcchip.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;
+ padding:10px 20px;border-radius:10px;font-size:.9rem;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+#toast.show{opacity:.95;transform:translateX(-50%)}
+#previewModal{display:none;position:fixed;inset:0;background:rgba(20,30,28,.45);z-index:80;align-items:center;justify-content:center;padding:18px}
+.pvbox{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.pvhead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px}
+.pvhead h3{font-size:1rem;color:var(--teal)}
+.pvbox textarea{flex:1;margin:0 18px;border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:.84rem;line-height:1.55;
+ font-family:"Sarasa Mono TC",Consolas,Menlo,"PingFang TC","Noto Sans TC",monospace;min-height:340px;resize:vertical;white-space:pre;overflow:auto}
+.pvfoot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px}
+@media print{#previewModal,#toast{display:none!important}}
+.section-label{
+  font-size:.78rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+  margin:20px 2px 8px;display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+/* ---- assessment form ---- */
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.formgrid{grid-template-columns:1fr}}
+.fbox{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.fbox h3{font-size:.92rem;font-weight:750;margin-bottom:10px;color:var(--teal)}
+.frow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.frow label{font-size:.88rem;font-weight:600;min-width:88px}
+.frow input[type=number]{
+  width:90px;padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;font-size:.95rem;font-family:inherit;
+}
+.frow .unit{font-size:.8rem;color:var(--ink-soft)}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:none;background:#fff;padding:7px 16px;font-size:.9rem;font-family:inherit;cursor:pointer;color:var(--ink-soft);font-weight:600}
+.seg button.on{background:var(--teal);color:#fff}
+.conds{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+@media(max-width:480px){.conds{grid-template-columns:1fr}}
+.conds label{
+  display:flex;gap:8px;align-items:flex-start;font-size:.86rem;padding:5px 2px;cursor:pointer;
+}
+.conds input{margin-top:3px;accent-color:var(--teal);width:16px;height:16px}
+.conds .sx{font-size:.72rem;color:var(--ink-soft)}
+.druginput{display:flex;gap:8px;margin-bottom:10px;position:relative}
+.druginput input{
+  flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font-size:.98rem;font-family:inherit;
+}
+.dlist{display:flex;flex-wrap:wrap;gap:8px}
+.dtag{
+  display:inline-flex;align-items:center;gap:8px;background:var(--teal-soft);color:var(--teal);
+  border-radius:999px;padding:6px 8px 6px 14px;font-size:.9rem;font-weight:650;
+}
+.dtag button{border:none;background:rgba(14,110,99,.15);color:var(--teal);border-radius:50%;width:20px;height:20px;cursor:pointer;font-weight:800;line-height:1;font-size:.8rem}
+.dropdown{
+  position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--line);border-radius:10px;
+  margin-top:4px;z-index:30;max-height:240px;overflow:auto;box-shadow:0 8px 24px rgba(27,39,51,.12);
+}
+.dropdown div{padding:9px 13px;font-size:.92rem;cursor:pointer;border-bottom:1px solid #f0f2f0}
+.dropdown div:hover{background:var(--teal-soft)}
+.dropdown .sub{color:var(--ink-soft);font-size:.8rem}
+.crclbox{background:var(--renal-bg);border-radius:10px;padding:10px 12px;margin-top:6px;font-size:.85rem}
+.crclbox b{color:var(--renal)}
+.summary{
+  display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 4px;
+}
+.sumchip{border-radius:10px;padding:8px 14px;font-size:.86rem;font-weight:650;display:flex;gap:8px;align-items:center}
+.sumchip .n{font-size:1.15rem;font-weight:800}
+.s-avoid{background:var(--avoid-bg);color:var(--avoid)}
+.s-disease{background:var(--disease-bg);color:var(--disease)}
+.s-caution{background:var(--caution-bg);color:var(--caution)}
+.s-ddi{background:var(--ddi-bg);color:var(--ddi)}
+.s-renal{background:var(--renal-bg);color:var(--renal)}
+.s-ok{background:var(--ok-bg);color:var(--ok)}
+.notfound{
+  background:var(--ok-bg);border:1px solid #cfe7d6;border-radius:var(--radius);padding:12px 16px;font-size:.9rem;color:var(--ok);
+}
+.empty{
+  text-align:center;color:var(--ink-soft);font-size:.92rem;padding:36px 10px;
+  border:1.5px dashed var(--line);border-radius:var(--radius);margin-top:16px;background:#fcfdfc;
+}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.legend span{font-size:.74rem;display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft)}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+footer{
+  max-width:980px;margin:0 auto;padding:0 18px 36px;font-size:.74rem;color:var(--ink-soft);line-height:1.6;
+}
+footer .src{border-top:1px solid var(--line);padding-top:14px}
+.toolbar{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+@media print{
+  header,.tabs,.toolbar,.searchbox,.hint,.sugg,.fbox,.druginput,.legend{display:none!important}
+  body{background:#fff}
+  .card{break-inside:avoid;box-shadow:none}
+  main{padding:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="kicker">2023 AGS Beers Criteria® ＋ PIM-Taiwan 2018 · Dual Reference Tool</div>
+    <h1>老年潛在不適當用藥（PIM）查詢
+      <span class="en">Potentially Inappropriate Medication Lookup for Adults ≥65</span>
+    </h1>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" id="tabQ" onclick="switchTab('q')">快速查詢 Quick Lookup</button>
+  <button class="tab" id="tabA" onclick="switchTab('a')">完整評估 Patient Assessment</button>
+</div>
+
+<main>
+<!-- ============ QUICK LOOKUP ============ -->
+<div class="panel active" id="panelQ">
+  <div class="searchbox">
+    <input id="qInput" placeholder="輸入學名／商品名／中文名，如 zolpidem、Stilnox、使蒂諾斯…" autocomplete="off">
+    <button class="btn" onclick="doQuickSearch()">查詢</button>
+  </div>
+  <div class="hint">支援英文學名、英文商品名與台灣常見中文商品名；輸入兩個字以上會自動出現建議。</div>
+  <div class="sugg" id="qSugg"></div>
+  <div class="legend" style="margin-top:12px">
+    <span style="font-weight:700">準則來源 Source：</span>
+    <button class="chip srcchip on src-ags" onclick="toggleSrc('ags')">✓ 2023 AGS Beers</button>
+    <button class="chip srcchip on src-tw" onclick="toggleSrc('tw')">✓ PIM-Taiwan 2018</button>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--avoid)"></i>Table 1 避免使用</span>
+    <span><i style="background:var(--disease)"></i>Table 2 特定疾病避免</span>
+    <span><i style="background:var(--caution)"></i>Table 3 謹慎使用</span>
+    <span><i style="background:var(--ddi)"></i>Table 4 藥物交互</span>
+    <span><i style="background:var(--renal)"></i>Table 5 腎功能調整</span>
+  </div>
+  <div class="results" id="qResults"></div>
+  <div class="toolbar" id="qExportBar" style="display:none;justify-content:flex-start">
+    <button class="btn ghost" onclick="showPreview(buildQuickText())">預覽病歷文字 Preview</button>
+    <button class="btn ghost" onclick="copyTxt(buildQuickText())">複製病歷文字 Copy</button>
+    <button class="btn" onclick="exportQuickTxt()">匯出 TXT</button>
+  </div>
+</div>
+
+<!-- ============ ASSESSMENT ============ -->
+<div class="panel" id="panelA">
+  <div class="formgrid">
+    <div class="fbox">
+      <h3>病人基本資料 Patient</h3>
+      <div class="frow"><label>年齡 Age</label><input type="number" id="pAge" min="18" max="120" placeholder="75"><span class="unit">歲</span></div>
+      <div class="frow"><label>性別 Sex</label>
+        <div class="seg"><button id="sexF" class="on" onclick="setSex('F')">女 F</button><button id="sexM" onclick="setSex('M')">男 M</button></div>
+      </div>
+      <div class="frow"><label>CrCl</label><input type="number" id="pCrcl" min="1" max="200" placeholder="—"><span class="unit">mL/min（可直接輸入或下方估算）</span></div>
+      <div class="frow"><label>體重 Wt</label><input type="number" id="pWt" min="20" max="200" placeholder="60"><span class="unit">kg</span></div>
+      <div class="frow"><label>肌酸酐 Scr</label><input type="number" id="pScr" min="0.1" max="20" step="0.1" placeholder="1.0"><span class="unit">mg/dL</span>
+        <button class="btn small ghost" onclick="calcCG()">估算 CrCl</button></div>
+      <div class="crclbox" id="cgOut" style="display:none"></div>
+    </div>
+    <div class="fbox">
+      <h3>疾病／症候群 Conditions（勾選符合者）</h3>
+      <div class="conds" id="condBox"></div>
+    </div>
+  </div>
+
+  <div class="fbox" style="margin-top:14px">
+    <h3>目前用藥 Medication List</h3>
+    <div class="druginput">
+      <input id="aInput" placeholder="輸入藥名後按 Enter 或「加入」，如 lorazepam、Ativan、安定文…" autocomplete="off">
+      <button class="btn" onclick="addDrugFromInput()">加入</button>
+      <div class="dropdown" id="aDrop" style="display:none"></div>
+    </div>
+    <div class="dlist" id="aList"></div>
+  </div>
+
+  <div class="toolbar" style="justify-content:flex-start">
+    <span style="font-size:.82rem;font-weight:700;align-self:center;color:var(--ink-soft)">準則來源 Source：</span>
+    <button class="chip srcchip on src-ags" onclick="toggleSrc('ags')">✓ 2023 AGS Beers</button>
+    <button class="chip srcchip on src-tw" onclick="toggleSrc('tw')">✓ PIM-Taiwan 2018</button>
+  </div>
+  <div class="toolbar">
+    <button class="btn ghost" onclick="resetAssess()">清除 Reset</button>
+    <button class="btn ghost" onclick="window.print()">列印 Print</button>
+    <button class="btn" onclick="runAssess()">執行評估 Evaluate</button>
+  </div>
+  <div class="toolbar" id="aExportBar" style="display:none;justify-content:flex-start">
+    <button class="btn ghost" onclick="showPreview(buildAssessText())">預覽病歷文字 Preview</button>
+    <button class="btn ghost" onclick="copyTxt(buildAssessText())">複製病歷文字 Copy</button>
+    <button class="btn" onclick="exportAssessTxt()">匯出 TXT</button>
+  </div>
+  <div id="aResults"></div>
+</div>
+</main>
+
+<footer>
+  <div class="src">
+    資料來源 Sources：① A Pocket Guide to the 2023 AGS Beers Criteria®, American Geriatrics Society；② Chang CB, Lai HY, Hwang SJ, et al. The updated PIM-Taiwan criteria: a list of potentially inappropriate medications in older people. <i>Ther Adv Chronic Dis</i> 2019;10:1–21（2018 年版 PIM-Taiwan 準則）。本工具僅供臨床參考，為輔助決策之指引，不取代臨床判斷與病人個別化考量；適用於 ≥65 歲病人。Beers Criteria 以美國用藥情境制定；PIM-Taiwan 以台灣健保收載品項與本地專家共識制定，兩者並列供交叉參照。PIM-Taiwan 為求臨床易用，未納入謹慎使用、藥物交互作用與腎功能分級等分類，故 Table 3–5 與交互作用警示均來自 Beers 2023。商品名對照為台灣常見品項，僅供搜尋輔助，請以實際處方核對學名。<br>
+    <span style="font-size:.78rem;color:var(--ink-soft);margin-top:6px;display:inline-block">本系統由<b>新光醫院家庭醫學科／老年醫學科　林醫師</b>藉由生成式 AI 設計</span>
+    This tool is for clinical reference only and does not replace clinical judgment. Intended for adults ≥65 in ambulatory, acute, and institutional settings (excluding hospice/end-of-life care).
+  </div>
+</footer>
+<div id="previewModal" onclick="if(event.target===this)closePreview()">
+  <div class="pvbox">
+    <div class="pvhead"><h3>病歷文字預覽 Chart-note preview</h3>
+      <button class="btn small ghost" onclick="closePreview()">關閉 ✕</button></div>
+    <textarea id="previewText" spellcheck="false"></textarea>
+    <div class="pvfoot">
+      <button class="btn ghost" id="copyBtn" onclick="copyPreview()">複製全文 Copy</button>
+      <button class="btn" onclick="dlPreview()">下載 TXT</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   DRUG MASTER  k=key en=generic b=English brands zh=Chinese brands t=class tags
+   tags: ach(strong anticholinergic) ah(1st-gen antihistamine) tca ssri snri antidep
+         ap(antipsychotic) ap-pd-ok bzd zdrug opioid smr aed gabapentinoid achei
+         nsaid cox2 ppi h2 cimetidine su sglt2 tzd steroid alpha1 ras ksparing loop
+         diuretic lithium warfarin amiodarone macrolide cipro tmpsmx phenytoin
+         theophylline tramadol doac ui-antimuscarinic cns(counts toward CNS rule)
+========================================================= */
+const DRUGS=[
+/* --- first-generation antihistamines --- */
+{k:'brompheniramine',en:'Brompheniramine',b:[],zh:[],t:['ach','ah']},
+{k:'chlorpheniramine',en:'Chlorpheniramine',b:['CTM','Chlor-Trimeton'],zh:['氯芬尼拉明'],t:['ach','ah']},
+{k:'cyproheptadine',en:'Cyproheptadine',b:['Periactin'],zh:[],t:['ach','ah']},
+{k:'dimenhydrinate',en:'Dimenhydrinate',b:['Dramamine'],zh:['暈海寧'],t:['ach','ah']},
+{k:'diphenhydramine',en:'Diphenhydramine (oral)',b:['Vena','Benadryl'],zh:['維納'],t:['ach','ah']},
+{k:'doxylamine',en:'Doxylamine',b:['Unisom'],zh:[],t:['ach','ah']},
+{k:'hydroxyzine',en:'Hydroxyzine',b:['Atarax','Vistaril'],zh:['安泰樂'],t:['ach','ah']},
+{k:'meclizine',en:'Meclizine',b:['Bonamine','Antivert'],zh:[],t:['ach','ah']},
+{k:'promethazine',en:'Promethazine',b:['Phenergan'],zh:[],t:['ach','ah','pd-antiemetic']},
+{k:'triprolidine',en:'Triprolidine',b:[],zh:[],t:['ach','ah']},
+/* --- anti-infective --- */
+{k:'nitrofurantoin',en:'Nitrofurantoin',b:['Macrodantin','Furadantin'],zh:[],t:[]},
+{k:'ciprofloxacin',en:'Ciprofloxacin',b:['Ciproxin'],zh:['速博新'],t:['cipro']},
+{k:'tmpsmx',en:'Trimethoprim-Sulfamethoxazole (Co-trimoxazole)',b:['Baktar','Sevatrim','Bactrim'],zh:['撲菌特'],t:['tmpsmx']},
+{k:'clarithromycin',en:'Clarithromycin',b:['Klaricid'],zh:['開羅理黴素'],t:['macrolide']},
+{k:'erythromycin',en:'Erythromycin',b:[],zh:['紅黴素'],t:['macrolide']},
+/* --- cardiovascular & antithrombotic --- */
+{k:'aspirin',en:'Aspirin',b:['Bokey','Tapal'],zh:['伯基','阿斯匹靈'],t:['asa']},
+{k:'warfarin',en:'Warfarin',b:['Coumadin','Orfarin'],zh:['可邁丁','歐服寧','華法林'],t:['warfarin']},
+{k:'rivaroxaban',en:'Rivaroxaban',b:['Xarelto'],zh:['拜瑞妥'],t:['doac']},
+{k:'dabigatran',en:'Dabigatran',b:['Pradaxa'],zh:['普栓達'],t:['doac']},
+{k:'edoxaban',en:'Edoxaban',b:['Lixiana'],zh:['里先安'],t:['doac']},
+{k:'apixaban',en:'Apixaban',b:['Eliquis'],zh:['艾必克凝'],t:['doac']},
+{k:'enoxaparin',en:'Enoxaparin',b:['Clexane','Lovenox'],zh:['克立生'],t:[]},
+{k:'fondaparinux',en:'Fondaparinux',b:['Arixtra'],zh:['安卓'],t:[]},
+{k:'prasugrel',en:'Prasugrel',b:['Efient'],zh:['抑凝安'],t:[]},
+{k:'ticagrelor',en:'Ticagrelor',b:['Brilinta'],zh:['百無凝'],t:[]},
+{k:'dipyridamole',en:'Dipyridamole (oral short-acting)',b:['Persantin'],zh:['沛心達'],t:[]},
+{k:'cilostazol',en:'Cilostazol',b:['Pletaal'],zh:['培達','普達'],t:[]},
+{k:'doxazosin',en:'Doxazosin',b:['Doxaben','Cardura'],zh:['可迅'],t:['alpha1']},
+{k:'prazosin',en:'Prazosin',b:['Minipress'],zh:['脈寧平'],t:['alpha1']},
+{k:'terazosin',en:'Terazosin',b:['Hytrin'],zh:['定脈平'],t:['alpha1']},
+{k:'clonidine',en:'Clonidine',b:['Catapres'],zh:['降保適'],t:[]},
+{k:'guanfacine',en:'Guanfacine',b:['Intuniv'],zh:[],t:[]},
+{k:'nifedipine_ir',en:'Nifedipine (immediate release 短效)',b:['Adalat 10mg'],zh:['冠達悅(短效)'],t:[]},
+{k:'amiodarone',en:'Amiodarone',b:['Cordarone'],zh:['臟得樂'],t:['amiodarone']},
+{k:'dronedarone',en:'Dronedarone',b:['Multaq'],zh:['脈泰克'],t:[]},
+{k:'digoxin',en:'Digoxin',b:['Lanoxin'],zh:['狄戈辛','毛地黃'],t:[]},
+{k:'diltiazem',en:'Diltiazem',b:['Herbesser'],zh:['合必爽'],t:['nondhpccb']},
+{k:'verapamil',en:'Verapamil',b:['Isoptin'],zh:['心舒平'],t:['nondhpccb']},
+{k:'dofetilide',en:'Dofetilide',b:['Tikosyn'],zh:[],t:[]},
+/* --- CNS: antidepressants --- */
+{k:'amitriptyline',en:'Amitriptyline',b:['Elavil','Tryptanol'],zh:[],t:['ach','tca','tca3','antidep','cns']},
+{k:'amoxapine',en:'Amoxapine',b:[],zh:[],t:['ach','tca','antidep','cns']},
+{k:'clomipramine',en:'Clomipramine',b:['Anafranil'],zh:['安納福寧'],t:['ach','tca','tca3','antidep','cns']},
+{k:'desipramine',en:'Desipramine',b:[],zh:[],t:['ach','tca','antidep','cns']},
+{k:'doxepin',en:'Doxepin (>6 mg/day)',b:['Sinequan'],zh:[],t:['ach','tca','tca3','antidep','cns']},
+{k:'imipramine',en:'Imipramine',b:['Tofranil'],zh:['妥富腦'],t:['ach','tca','tca3','antidep','cns']},
+{k:'nortriptyline',en:'Nortriptyline',b:['Aventyl'],zh:[],t:['ach','tca','antidep','cns']},
+{k:'paroxetine',en:'Paroxetine',b:['Seroxat','Paxil'],zh:['克憂果'],t:['ach','ssri','antidep','cns']},
+{k:'sertraline',en:'Sertraline',b:['Zoloft'],zh:['樂復得'],t:['ssri','antidep','cns']},
+{k:'escitalopram',en:'Escitalopram',b:['Lexapro'],zh:['立普能'],t:['ssri','antidep','cns']},
+{k:'fluoxetine',en:'Fluoxetine',b:['Prozac'],zh:['百憂解'],t:['ssri','antidep','cns']},
+{k:'citalopram',en:'Citalopram',b:['Cipram'],zh:[],t:['ssri','antidep','cns']},
+{k:'fluvoxamine',en:'Fluvoxamine',b:['Luvox'],zh:['無鬱寧'],t:['ssri','antidep','cns']},
+{k:'venlafaxine',en:'Venlafaxine',b:['Efexor'],zh:['速悅'],t:['snri','antidep','cns']},
+{k:'duloxetine',en:'Duloxetine',b:['Cymbalta'],zh:['千憂解'],t:['snri','antidep','cns']},
+{k:'desvenlafaxine',en:'Desvenlafaxine',b:['Pristiq'],zh:[],t:['snri','antidep','cns']},
+{k:'mirtazapine',en:'Mirtazapine',b:['Remeron'],zh:['樂活優'],t:['siadh-ad']},
+/* --- CNS: anticholinergic antiparkinson --- */
+{k:'benztropine',en:'Benztropine (oral)',b:['Cogentin'],zh:[],t:['ach']},
+{k:'trihexyphenidyl',en:'Trihexyphenidyl',b:['Artane'],zh:['阿丹'],t:['ach']},
+/* --- CNS: antipsychotics --- */
+{k:'aripiprazole',en:'Aripiprazole',b:['Abilify'],zh:['安立復'],t:['ap','cns']},
+{k:'haloperidol',en:'Haloperidol',b:['Haldol'],zh:['好度'],t:['ap','cns']},
+{k:'olanzapine',en:'Olanzapine',b:['Zyprexa'],zh:['金普薩'],t:['ap','cns','syncope-ap']},
+{k:'quetiapine',en:'Quetiapine',b:['Seroquel'],zh:['思樂康'],t:['ap','ap-pd-ok','cns']},
+{k:'risperidone',en:'Risperidone',b:['Risperdal'],zh:['理思必妥'],t:['ap','cns']},
+{k:'chlorpromazine',en:'Chlorpromazine',b:['Wintermin'],zh:['穩他眠'],t:['ap','cns','syncope-ap']},
+{k:'clozapine',en:'Clozapine',b:['Clozaril'],zh:['可致律'],t:['ap','ap-pd-ok','cns']},
+{k:'paliperidone',en:'Paliperidone',b:['Invega'],zh:['思維佳'],t:['ap','cns']},
+{k:'lurasidone',en:'Lurasidone',b:['Latuda'],zh:['樂途達'],t:['ap','cns']},
+{k:'ziprasidone',en:'Ziprasidone',b:['Geodon'],zh:[],t:['ap','cns']},
+{k:'prochlorperazine',en:'Prochlorperazine',b:['Novamin'],zh:['諾安命'],t:['pd-antiemetic','ach']},
+/* --- CNS: barbiturates / benzodiazepines / z-drugs --- */
+{k:'butalbital',en:'Butalbital',b:[],zh:[],t:['aed','cns']},
+{k:'phenobarbital',en:'Phenobarbital',b:['Luminal'],zh:['魯米那'],t:['aed','cns']},
+{k:'primidone',en:'Primidone',b:['Mysoline'],zh:[],t:['aed','cns']},
+{k:'alprazolam',en:'Alprazolam',b:['Xanax'],zh:['贊安諾'],t:['bzd','cns']},
+{k:'chlordiazepoxide',en:'Chlordiazepoxide',b:['Librium'],zh:[],t:['bzd','cns']},
+{k:'clobazam',en:'Clobazam',b:['Frisium'],zh:[],t:['bzd','cns']},
+{k:'clonazepam',en:'Clonazepam',b:['Rivotril','Klonopin'],zh:['利福全'],t:['bzd','cns']},
+{k:'clorazepate',en:'Clorazepate',b:['Tranxene'],zh:[],t:['bzd','cns']},
+{k:'diazepam',en:'Diazepam',b:['Valium'],zh:['煩寧'],t:['bzd','cns']},
+{k:'estazolam',en:'Estazolam',b:['Eurodin'],zh:['悠樂丁'],t:['bzd','cns']},
+{k:'lorazepam',en:'Lorazepam',b:['Ativan'],zh:['安定文'],t:['bzd','cns']},
+{k:'midazolam',en:'Midazolam',b:['Dormicum'],zh:['導美睡'],t:['bzd','cns']},
+{k:'oxazepam',en:'Oxazepam',b:['Serax'],zh:[],t:['bzd','cns']},
+{k:'temazepam',en:'Temazepam',b:['Restoril'],zh:[],t:['bzd','cns']},
+{k:'triazolam',en:'Triazolam',b:['Halcion'],zh:['酣樂欣'],t:['bzd','cns']},
+{k:'eszopiclone',en:'Eszopiclone',b:['Lunesta'],zh:[],t:['zdrug','cns']},
+{k:'zaleplon',en:'Zaleplon',b:['Sonata','Onsleep'],zh:[],t:['zdrug','cns']},
+{k:'zolpidem',en:'Zolpidem',b:['Stilnox','Zolpi'],zh:['使蒂諾斯'],t:['zdrug','cns']},
+{k:'zopiclone',en:'Zopiclone（台灣常見，等同 Z-drug 類）',b:['Imovane','Genclone'],zh:['宜眠安'],t:['zdrug','cns']},
+{k:'meprobamate',en:'Meprobamate',b:[],zh:[],t:['cns']},
+{k:'ergoloid',en:'Ergoloid mesylates',b:['Hydergine'],zh:[],t:[]},
+/* --- endocrine --- */
+{k:'testosterone',en:'Testosterone',b:['Nebido','Androgel'],zh:['耐必多'],t:[]},
+{k:'methyltestosterone',en:'Methyltestosterone',b:[],zh:[],t:[]},
+{k:'conj_estrogen',en:'Conjugated estrogens (oral)',b:['Premarin'],zh:['普力馬林'],t:['estrogen-systemic']},
+{k:'estradiol',en:'Estradiol (oral/patch)',b:['Estrade','Climara'],zh:[],t:['estrogen-systemic']},
+{k:'ssi',en:'Insulin, sliding scale only（僅短效滑尺式）',b:[],zh:['滑尺式胰島素'],t:[]},
+{k:'gliclazide',en:'Gliclazide',b:['Diamicron'],zh:['岱蜜克龍'],t:['su']},
+{k:'glimepiride',en:'Glimepiride',b:['Amaryl'],zh:['瑪爾胰'],t:['su','su-long']},
+{k:'glipizide',en:'Glipizide',b:['Minidiab'],zh:['滅糖尿'],t:['su']},
+{k:'glyburide',en:'Glyburide (Glibenclamide)',b:['Euglucon','Daonil'],zh:['佑而康'],t:['su','su-long']},
+{k:'desiccated_thyroid',en:'Desiccated thyroid',b:['Armour Thyroid'],zh:['乾燥甲狀腺素'],t:[]},
+{k:'megestrol',en:'Megestrol',b:['Megace'],zh:['麥格斯'],t:[]},
+{k:'somatropin',en:'Growth hormone (Somatropin)',b:['Genotropin'],zh:['生長激素'],t:[]},
+{k:'pioglitazone',en:'Pioglitazone',b:['Actos'],zh:['愛妥糖'],t:['tzd']},
+{k:'canagliflozin',en:'Canagliflozin',b:['Canaglu','Invokana'],zh:['可拿糖'],t:['sglt2']},
+{k:'dapagliflozin',en:'Dapagliflozin',b:['Forxiga'],zh:['福適佳'],t:['sglt2']},
+{k:'empagliflozin',en:'Empagliflozin',b:['Jardiance'],zh:['恩排糖'],t:['sglt2']},
+{k:'ertugliflozin',en:'Ertugliflozin',b:['Steglatro'],zh:[],t:['sglt2']},
+/* --- GI --- */
+{k:'dexlansoprazole',en:'Dexlansoprazole',b:['Dexilant'],zh:['得喜胃通'],t:['ppi']},
+{k:'esomeprazole',en:'Esomeprazole',b:['Nexium'],zh:['耐適恩'],t:['ppi']},
+{k:'lansoprazole',en:'Lansoprazole',b:['Takepron'],zh:['泰克胃通'],t:['ppi']},
+{k:'omeprazole',en:'Omeprazole',b:['Losec'],zh:['樂酸克'],t:['ppi']},
+{k:'pantoprazole',en:'Pantoprazole',b:['Pantoloc'],zh:['潘妥洛克'],t:['ppi']},
+{k:'rabeprazole',en:'Rabeprazole',b:['Pariet'],zh:['百抑潰'],t:['ppi']},
+{k:'metoclopramide',en:'Metoclopramide',b:['Primperan'],zh:['腹寧朗'],t:['pd-antiemetic']},
+{k:'atropine',en:'Atropine (oral, 不含眼用)',b:[],zh:[],t:['ach']},
+{k:'clidinium',en:'Clidinium-Chlordiazepoxide',b:['Librax'],zh:[],t:['ach']},
+{k:'dicyclomine',en:'Dicyclomine',b:['Bentyl'],zh:[],t:['ach']},
+{k:'hyoscyamine',en:'Hyoscyamine',b:['Levsin'],zh:[],t:['ach']},
+{k:'scopolamine',en:'Scopolamine (Hyoscine)',b:['Buscopan'],zh:['補斯可伴'],t:['ach']},
+{k:'mineral_oil',en:'Mineral oil (oral)',b:[],zh:['礦物油(口服)'],t:[]},
+{k:'cimetidine',en:'Cimetidine',b:['Tagamet'],zh:['泰胃美'],t:['h2','cimetidine']},
+{k:'famotidine',en:'Famotidine',b:['Gaster'],zh:['蓋舒泰'],t:['h2']},
+{k:'nizatidine',en:'Nizatidine',b:['Axid'],zh:[],t:['h2']},
+/* --- GU --- */
+{k:'desmopressin',en:'Desmopressin',b:['Minirin'],zh:['迷你寧'],t:[]},
+{k:'oxybutynin',en:'Oxybutynin',b:['Ditropan'],zh:['達多幫'],t:['ach','ui-antimuscarinic']},
+{k:'tolterodine',en:'Tolterodine',b:['Detrusitol'],zh:['得舒妥'],t:['ach','ui-antimuscarinic']},
+{k:'solifenacin',en:'Solifenacin',b:['Vesicare'],zh:['衛喜康'],t:['ach','ui-antimuscarinic']},
+/* --- pain / NSAIDs / opioids / muscle relaxants --- */
+{k:'diclofenac',en:'Diclofenac',b:['Voltaren'],zh:['服他寧'],t:['nsaid']},
+{k:'diflunisal',en:'Diflunisal',b:['Dolobid'],zh:[],t:['nsaid']},
+{k:'etodolac',en:'Etodolac',b:['Lonine'],zh:[],t:['nsaid']},
+{k:'flurbiprofen',en:'Flurbiprofen',b:['Ansaid'],zh:[],t:['nsaid']},
+{k:'ibuprofen',en:'Ibuprofen',b:['Brufen','Advil'],zh:['普羅芬'],t:['nsaid']},
+{k:'indomethacin',en:'Indomethacin',b:['Indocid'],zh:[],t:['nsaid','worst-nsaid']},
+{k:'ketorolac',en:'Ketorolac (oral & parenteral)',b:['Keto','Toradol'],zh:[],t:['nsaid','worst-nsaid']},
+{k:'meloxicam',en:'Meloxicam',b:['Mobic'],zh:['骨敏捷'],t:['nsaid']},
+{k:'nabumetone',en:'Nabumetone',b:['Relifex'],zh:[],t:['nsaid']},
+{k:'naproxen',en:'Naproxen',b:['Naposin','Apranax'],zh:['能百鎮'],t:['nsaid']},
+{k:'oxaprozin',en:'Oxaprozin',b:['Daypro'],zh:[],t:['nsaid']},
+{k:'piroxicam',en:'Piroxicam',b:['Feldene'],zh:[],t:['nsaid']},
+{k:'sulindac',en:'Sulindac',b:['Clinoril'],zh:[],t:['nsaid']},
+{k:'celecoxib',en:'Celecoxib',b:['Celebrex'],zh:['希樂葆'],t:['cox2']},
+{k:'etoricoxib',en:'Etoricoxib',b:['Arcoxia'],zh:['萬克適'],t:['cox2']},
+{k:'meperidine',en:'Meperidine (Pethidine)',b:['Demerol'],zh:['配西汀'],t:['opioid','cns']},
+{k:'morphine',en:'Morphine',b:['MST'],zh:['嗎啡'],t:['opioid','cns']},
+{k:'oxycodone',en:'Oxycodone',b:['OxyContin'],zh:[],t:['opioid','cns']},
+{k:'fentanyl',en:'Fentanyl',b:['Durogesic'],zh:['多瑞吉'],t:['opioid','cns']},
+{k:'codeine',en:'Codeine',b:[],zh:['可待因'],t:['opioid','cns']},
+{k:'tramadol',en:'Tramadol',b:['Tramal','Ultracet(複方)'],zh:['舒痛停'],t:['opioid','cns','tramadol','siadh-ad']},
+{k:'carisoprodol',en:'Carisoprodol',b:['Soma'],zh:[],t:['smr','cns']},
+{k:'chlorzoxazone',en:'Chlorzoxazone',b:['Solaxin'],zh:['舒筋立'],t:['smr','cns']},
+{k:'cyclobenzaprine',en:'Cyclobenzaprine',b:['Flexeril'],zh:[],t:['smr','ach','cns']},
+{k:'metaxalone',en:'Metaxalone',b:['Skelaxin'],zh:[],t:['smr','cns']},
+{k:'methocarbamol',en:'Methocarbamol',b:['Robaxin'],zh:[],t:['smr','cns']},
+{k:'orphenadrine',en:'Orphenadrine',b:['Norflex'],zh:[],t:['smr','ach','cns']},
+{k:'baclofen',en:'Baclofen',b:['Lioresal'],zh:['利爾舒'],t:[]},
+/* --- misc for interactions / table 2-5 --- */
+{k:'donepezil',en:'Donepezil',b:['Aricept'],zh:['愛憶欣'],t:['achei']},
+{k:'galantamine',en:'Galantamine',b:['Reminyl'],zh:['利憶靈'],t:['achei']},
+{k:'rivastigmine',en:'Rivastigmine',b:['Exelon'],zh:['憶思能'],t:['achei']},
+{k:'prednisolone',en:'Prednisolone',b:['Donison'],zh:['普賴鬆'],t:['steroid']},
+{k:'methylprednisolone',en:'Methylprednisolone',b:['Solu-Medrol'],zh:[],t:['steroid']},
+{k:'dexamethasone',en:'Dexamethasone',b:['Decadron'],zh:['氟美松'],t:['steroid']},
+{k:'dxm_quinidine',en:'Dextromethorphan-Quinidine',b:['Nuedexta'],zh:[],t:[]},
+{k:'phenytoin',en:'Phenytoin',b:['Dilantin'],zh:['癲能停'],t:['aed','cns','phenytoin']},
+{k:'valproate',en:'Valproic acid',b:['Depakine'],zh:['帝拔癲'],t:['aed','cns']},
+{k:'carbamazepine',en:'Carbamazepine',b:['Tegretol'],zh:['癲通'],t:['aed','cns','siadh-ad']},
+{k:'oxcarbazepine',en:'Oxcarbazepine',b:['Trileptal'],zh:['除癲達'],t:['aed','cns','siadh-ad']},
+{k:'lamotrigine',en:'Lamotrigine',b:['Lamictal'],zh:['樂命達'],t:['aed','cns']},
+{k:'topiramate',en:'Topiramate',b:['Topamax'],zh:['妥泰'],t:['aed','cns']},
+{k:'gabapentin',en:'Gabapentin',b:['Neurontin'],zh:['鎮頑癲'],t:['aed','gabapentinoid','cns']},
+{k:'pregabalin',en:'Pregabalin',b:['Lyrica'],zh:['利瑞卡'],t:['aed','gabapentinoid','cns']},
+{k:'levetiracetam',en:'Levetiracetam',b:['Keppra'],zh:['優閒'],t:['aed','cns']},
+{k:'furosemide',en:'Furosemide',b:['Lasix'],zh:['來適泄'],t:['loop','diuretic']},
+{k:'bumetanide',en:'Bumetanide',b:['Burinex'],zh:[],t:['loop','diuretic']},
+{k:'torasemide',en:'Torasemide',b:['Torem'],zh:[],t:['loop','diuretic']},
+{k:'hctz',en:'Hydrochlorothiazide (HCTZ)',b:['Dichlotride'],zh:[],t:['diuretic']},
+{k:'indapamide',en:'Indapamide',b:['Natrilix'],zh:['鈉催離'],t:['diuretic']},
+{k:'spironolactone',en:'Spironolactone',b:['Aldactone'],zh:['安達通'],t:['ksparing','diuretic']},
+{k:'amiloride',en:'Amiloride',b:['Midamor'],zh:[],t:['ksparing','diuretic']},
+{k:'triamterene',en:'Triamterene',b:['Dyrenium'],zh:[],t:['ksparing','diuretic']},
+{k:'lisinopril',en:'Lisinopril',b:['Zestril'],zh:['捷賜瑞'],t:['ras']},
+{k:'enalapril',en:'Enalapril',b:['Renitec'],zh:['益壓穩'],t:['ras']},
+{k:'ramipril',en:'Ramipril',b:['Tritace'],zh:['心達舒'],t:['ras']},
+{k:'captopril',en:'Captopril',b:['Capoten'],zh:[],t:['ras']},
+{k:'perindopril',en:'Perindopril',b:['Acertil'],zh:['雅施達'],t:['ras']},
+{k:'losartan',en:'Losartan',b:['Cozaar'],zh:['可悅您'],t:['ras']},
+{k:'valsartan',en:'Valsartan',b:['Diovan'],zh:['得安穩'],t:['ras']},
+{k:'olmesartan',en:'Olmesartan',b:['Olmetec'],zh:['雅脈'],t:['ras']},
+{k:'irbesartan',en:'Irbesartan',b:['Aprovel'],zh:['安普諾維'],t:['ras']},
+{k:'candesartan',en:'Candesartan',b:['Blopress'],zh:['博脈舒'],t:['ras']},
+{k:'telmisartan',en:'Telmisartan',b:['Micardis'],zh:['必康平'],t:['ras']},
+{k:'sacubitril_valsartan',en:'Sacubitril/Valsartan (ARNI)',b:['Entresto'],zh:['健安心'],t:['ras']},
+{k:'aliskiren',en:'Aliskiren',b:['Rasilez'],zh:[],t:['ras']},
+{k:'lithium',en:'Lithium',b:['Calith'],zh:['鋰鹽'],t:['lithium']},
+{k:'theophylline',en:'Theophylline',b:['Xanthium'],zh:['善克喘'],t:['theophylline']},
+{k:'colchicine',en:'Colchicine',b:[],zh:['秋水仙素'],t:[]},
+{k:'probenecid',en:'Probenecid',b:['Benemid'],zh:[],t:[]},
+{k:'azithromycin',en:'Azithromycin（不在 warfarin 交互名單）',b:['Zithromax'],zh:['日舒'],t:[]},
+/* --- PIM-Taiwan 2018 additional drugs --- */
+{k:'ranitidine',en:'Ranitidine',b:['Zantac'],zh:['善胃得'],t:['h2']},
+{k:'chlorpropamide',en:'Chlorpropamide',b:['Diabinese'],zh:[],t:['su','su-long']},
+{k:'maprotiline',en:'Maprotiline',b:['Ludiomil'],zh:['路滴美'],t:['ach','antidep','cns']},
+{k:'deanxit',en:'Flupentixol/Melitracen（複方）',b:['Deanxit'],zh:['黛安神'],t:['antidep','cns']},
+{k:'biperiden',en:'Biperiden',b:['Akineton'],zh:['安易能'],t:['ach']},
+{k:'levomepromazine',en:'Levomepromazine',b:['Nozinan'],zh:[],t:['ap','cns']},
+{k:'fluphenazine',en:'Fluphenazine',b:['Modecate'],zh:[],t:['ap','cns']},
+{k:'perphenazine',en:'Perphenazine',b:['Trilafon'],zh:[],t:['ap','cns']},
+{k:'trifluoperazine',en:'Trifluoperazine',b:['Stelazine'],zh:[],t:['ap','cns']},
+{k:'thioridazine',en:'Thioridazine',b:['Melleril'],zh:[],t:['ap','cns']},
+{k:'flupentixol',en:'Flupentixol',b:['Fluanxol'],zh:[],t:['ap','cns']},
+{k:'chlorprothixene',en:'Chlorprothixene',b:[],zh:[],t:['ap','cns']},
+{k:'pimozide',en:'Pimozide',b:['Orap'],zh:[],t:['ap','cns']},
+{k:'loxapine',en:'Loxapine',b:[],zh:[],t:['ap','cns']},
+{k:'sulpiride',en:'Sulpiride',b:['Dogmatyl'],zh:['脫蒙治'],t:['ap','cns']},
+{k:'amisulpride',en:'Amisulpride',b:['Solian'],zh:['首利安'],t:['ap','cns']},
+{k:'zotepine',en:'Zotepine',b:['Lodopin'],zh:[],t:['ap','cns']},
+{k:'medazepam',en:'Medazepam',b:[],zh:[],t:['bzd','cns']},
+{k:'bromazepam',en:'Bromazepam',b:['Lexotan'],zh:['立舒定'],t:['bzd','cns']},
+{k:'prazepam',en:'Prazepam',b:[],zh:[],t:['bzd','cns']},
+{k:'nordazepam',en:'Nordazepam',b:[],zh:[],t:['bzd','cns']},
+{k:'fludiazepam',en:'Fludiazepam',b:['Erispan'],zh:[],t:['bzd','cns']},
+{k:'oxazolam',en:'Oxazolam',b:['Serenal'],zh:[],t:['bzd','cns']},
+{k:'flurazepam',en:'Flurazepam',b:['Dalmadorm'],zh:['當眠多'],t:['bzd','cns']},
+{k:'nitrazepam',en:'Nitrazepam',b:['Mogadon'],zh:[],t:['bzd','cns']},
+{k:'flunitrazepam',en:'Flunitrazepam',b:['Rohypnol'],zh:['羅眠樂'],t:['bzd','cns']},
+{k:'brotizolam',en:'Brotizolam',b:['Lendormin'],zh:['戀多眠'],t:['bzd','cns']},
+{k:'tolmetin',en:'Tolmetin',b:[],zh:[],t:['nsaid']},
+{k:'alclofenac',en:'Alclofenac',b:[],zh:[],t:['nsaid']},
+{k:'acemetacin',en:'Acemetacin',b:[],zh:[],t:['nsaid']},
+{k:'aceclofenac',en:'Aceclofenac',b:[],zh:[],t:['nsaid']},
+{k:'tenoxicam',en:'Tenoxicam',b:['Tilcotil'],zh:[],t:['nsaid']},
+{k:'ketoprofen',en:'Ketoprofen',b:[],zh:[],t:['nsaid']},
+{k:'fenoprofen',en:'Fenoprofen',b:[],zh:[],t:['nsaid']},
+{k:'fenbufen',en:'Fenbufen',b:[],zh:[],t:['nsaid']},
+{k:'tiaprofenic',en:'Tiaprofenic acid',b:['Surgam'],zh:[],t:['nsaid']},
+{k:'mefenamic',en:'Mefenamic acid',b:['Ponstan'],zh:[],t:['nsaid']},
+{k:'flufenamic',en:'Flufenamic acid',b:[],zh:[],t:['nsaid']},
+{k:'meclofenamic',en:'Meclofenamic acid',b:[],zh:[],t:['nsaid']},
+{k:'niflumic',en:'Niflumic acid',b:[],zh:[],t:['nsaid']},
+{k:'benzydamine',en:'Benzydamine',b:[],zh:[],t:['nsaid']},
+{k:'nimesulide',en:'Nimesulide',b:[],zh:[],t:['nsaid']},
+{k:'clemastine',en:'Clemastine',b:['Tavegyl'],zh:[],t:['ach','ah']},
+{k:'diphenylpyraline',en:'Diphenylpyraline',b:[],zh:[],t:['ach','ah']},
+{k:'carbinoxamine',en:'Carbinoxamine',b:[],zh:[],t:['ach','ah']},
+{k:'dexchlorpheniramine',en:'Dexchlorpheniramine',b:['Polaramine'],zh:[],t:['ach','ah']},
+{k:'mequitazine',en:'Mequitazine',b:[],zh:[],t:['ach','ah']},
+{k:'buclizine',en:'Buclizine',b:['Longifene'],zh:[],t:['ach','ah']},
+{k:'cyclizine',en:'Cyclizine',b:[],zh:[],t:['ach','ah']},
+{k:'chlorcyclizine',en:'Chlorcyclizine',b:[],zh:[],t:['ach','ah']},
+{k:'oxatomide',en:'Oxatomide',b:[],zh:[],t:['ach','ah']},
+{k:'homochlorcyclizine',en:'Homochlorcyclizine',b:['Homoclomin'],zh:[],t:['ach','ah']},
+{k:'phenindamine',en:'Phenindamine',b:[],zh:[],t:['ach','ah']},
+{k:'mebhydrolin',en:'Mebhydrolin',b:[],zh:[],t:['ach','ah']},
+{k:'ketotifen',en:'Ketotifen',b:['Zaditen'],zh:[],t:['ach','ah']},
+{k:'rosiglitazone',en:'Rosiglitazone',b:['Avandia'],zh:['梵帝雅'],t:['tzd']},
+{k:'flavoxate',en:'Flavoxate',b:['Genurin'],zh:[],t:['ach','ui-antimuscarinic']},
+{k:'trospium',en:'Trospium',b:['Spasmolyt'],zh:[],t:['ach','ui-antimuscarinic']},
+{k:'disopyramide',en:'Disopyramide',b:['Rythmodan'],zh:[],t:['ach']},
+{k:'belladonna',en:'Belladonna alkaloids',b:[],zh:['顛茄生物鹼'],t:['ach']},
+{k:'propantheline',en:'Propantheline',b:['Pro-Banthine'],zh:[],t:['ach']},
+{k:'estriol',en:'Estriol',b:['Ovestin'],zh:[],t:['estrogen-systemic']},
+{k:'estrone',en:'Estrone',b:[],zh:[],t:['estrogen-systemic']},
+{k:'alprenolol',en:'Alprenolol',b:[],zh:[],t:['bb-ns']},
+{k:'carteolol',en:'Carteolol',b:['Mikelan'],zh:[],t:['bb-ns']},
+{k:'pindolol',en:'Pindolol',b:['Visken'],zh:[],t:['bb-ns']},
+{k:'sotalol',en:'Sotalol',b:['Sotacor'],zh:[],t:['bb-ns']}
+];
+</script>
+<script>
+/* =========================================================
+   CONDITIONS (Table 2 / Table 4 contexts)
+========================================================= */
+const CONDS=[
+ {k:'hf',zh:'心臟衰竭',en:'Heart failure'},
+ {k:'syncope',zh:'暈厥病史',en:'History of syncope'},
+ {k:'delirium',zh:'譫妄（現有或高風險）',en:'Delirium or high risk'},
+ {k:'dementia',zh:'失智症／認知障礙',en:'Dementia / cognitive impairment'},
+ {k:'falls',zh:'跌倒或骨折病史',en:'History of falls or fractures'},
+ {k:'pd',zh:'巴金森氏病',en:'Parkinson disease'},
+ {k:'ulcer',zh:'胃／十二指腸潰瘍病史',en:'History of gastric/duodenal ulcers'},
+ {k:'ckd3',zh:'慢性腎臟病 ≥3a 期',en:'CKD stage ≥3a'},
+ {k:'ui',zh:'尿失禁（限女性）',en:'Urinary incontinence (women)',sex:'F'},
+ {k:'bph',zh:'下泌尿道症狀／攝護腺肥大（限男性）',en:'LUTS / BPH (men)',sex:'M'},
+ {k:'copd',zh:'氣喘／慢性阻塞性肺病',en:'Asthma / COPD'}
+];
+
+/* =========================================================
+   CRITERIA
+   m: array of matchers {d:[drugKeys]} or {tag:'x',not:'y'}
+   lvl: avoid | disease | caution | renal
+========================================================= */
+const CRITERIA=[
+/* ================= TABLE 1 ================= */
+{tb:1,lvl:'avoid',cat:'抗組織胺 Antihistamines',m:[{tag:'ah'}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Highly anticholinergic; clearance falls with age and tolerance develops with hypnotic use. Cumulative anticholinergic exposure raises risk of confusion, falls, delirium, and dementia.',
+ whyZh:'強抗膽鹼作用；老年清除率下降、安眠用途易產生耐受性。累積抗膽鹼負荷增加意識混亂、跌倒、譫妄與失智風險。急性嚴重過敏反應短期使用 diphenhydramine 可屬合理。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'抗感染 Anti-infective',m:[{d:['nitrofurantoin']}],
+ rec:'Avoid if CrCl <30 mL/min or for long-term suppression',recZh:'CrCl <30 mL/min 或長期抑制性治療時避免',
+ why:'Potential pulmonary toxicity, hepatotoxicity, and peripheral neuropathy, especially with long-term use; safer alternatives exist.',
+ whyZh:'可能造成肺毒性、肝毒性與周邊神經病變，長期使用風險更高；有較安全的替代藥物。',
+ qe:'Low 低',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管／抗血栓 Cardiovascular & Antithrombotic',m:[{d:['aspirin']}],
+ rec:'Avoid initiating for primary prevention of CVD; consider deprescribing in current primary-prevention users',
+ recZh:'初級預防勿起始；已用於初級預防者考慮減除。次級預防（已有心血管疾病）仍屬適應症',
+ why:'Major bleeding risk rises markedly with age; trials suggest no net benefit and possible net harm when started for primary prevention in older adults.',
+ whyZh:'高齡者大出血風險顯著上升；研究顯示老年初級預防起始使用無淨效益、甚至可能有害。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管／抗血栓',m:[{d:['warfarin']}],
+ rec:'Avoid starting as initial therapy for nonvalvular AF or VTE unless DOACs are contraindicated',
+ recZh:'非瓣膜性心房顫動或 VTE 勿以 warfarin 起始（除非 DOAC 禁忌或有重大使用障礙）；長期使用且 INR 控制良好（TTR>70%）者可考慮續用',
+ why:'Higher major-bleeding risk (especially intracranial) than DOACs, with similar or lower effectiveness; DOACs are preferred for most patients.',
+ whyZh:'相較 DOAC，大出血（尤其顱內出血）風險較高、療效相近或較差；多數病人以 DOAC 為優先。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管／抗血栓',m:[{d:['rivaroxaban']}],
+ rec:'Avoid for long-term treatment of nonvalvular AF or VTE in favor of safer DOACs',
+ recZh:'長期治療心房顫動或 VTE 時避免，優先選擇較安全的抗凝替代（如 apixaban）；需一天一次以利服藥順從性時可屬合理',
+ why:'At long-term treatment doses, appears to carry higher major and GI bleeding risk in older adults than other DOACs, particularly apixaban.',
+ whyZh:'長期治療劑量下，老年大出血與腸胃道出血風險高於其他 DOAC（尤其 apixaban）；所有 DOAC 顱內出血風險均低於 warfarin。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管／抗血栓',m:[{d:['dipyridamole']}],
+ rec:'Avoid (oral short-acting; ER+aspirin combination not included)',
+ recZh:'避免使用（口服短效；與 aspirin 的長效複方不在此列；IV 用於心臟壓力測試可接受）',
+ why:'May cause orthostatic hypotension; more effective alternatives available.',
+ whyZh:'可能造成姿勢性低血壓；已有更有效的替代藥物。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管—降壓 Alpha-1 blockers',m:[{tag:'alpha1'}],
+ rec:'Avoid use as an antihypertensive',recZh:'避免作為降血壓藥使用（BPH 適應症另議）',
+ why:'High risk of orthostatic hypotension and related harms; not recommended as routine hypertension treatment; alternatives have better risk/benefit.',
+ whyZh:'姿勢性低血壓與相關傷害風險高；不建議作為常規降壓治療；替代藥物風險效益較佳。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管—降壓 Central alpha-agonists',m:[{d:['clonidine','guanfacine']}],
+ rec:'Avoid clonidine as first-line antihypertensive; avoid other central alpha-agonists for hypertension',
+ recZh:'clonidine 勿作為第一線降壓藥；其他中樞性 α 致效劑避免用於高血壓',
+ why:'High risk of adverse CNS effects; may cause bradycardia and orthostatic hypotension.',
+ whyZh:'中樞神經副作用風險高；可能造成心搏過緩與姿勢性低血壓。',
+ qe:'Low 低',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管',m:[{d:['nifedipine_ir']}],
+ rec:'Avoid (immediate release)',recZh:'避免使用（短效劑型）',
+ why:'Potential for hypotension; risk of precipitating myocardial ischemia.',
+ whyZh:'可能造成低血壓並誘發心肌缺血。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管—抗心律不整',m:[{d:['amiodarone']}],
+ rec:'Avoid as first-line therapy for AF unless heart failure or substantial LVH',
+ recZh:'心房顫動勿作為第一線（除非合併心臟衰竭或明顯左心室肥厚且偏好節律控制）',
+ why:'Effective for sinus rhythm maintenance but more toxic than other antiarrhythmics used in AF.',
+ whyZh:'維持竇性節律有效，但毒性高於其他用於心房顫動之抗心律不整藥。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管—抗心律不整',m:[{d:['dronedarone']}],
+ rec:'Avoid in permanent AF or severe/recently decompensated HF',
+ recZh:'永久性心房顫動或重度／近期失代償心臟衰竭者避免；HFrEF 症狀較輕（NYHA I–II）者謹慎',
+ why:'Worse outcomes reported in permanent AF and in severe or recently decompensated heart failure.',
+ whyZh:'於永久性心房顫動及重度／近期失代償心衰病人預後較差。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'心血管',m:[{d:['digoxin']}],
+ rec:'Avoid as first-line for AF rate control or for HF; if used, avoid doses >0.125 mg/day',
+ recZh:'勿作為心房顫動心率控制或心衰之第一線；若使用，劑量勿超過 0.125 mg/day；HFrEF 長期使用者停藥需謹慎',
+ why:'Safer, more effective alternatives exist; reduced renal clearance raises toxicity risk; higher doses add no benefit in HF.',
+ whyZh:'已有更安全有效的替代；腎清除率下降增加中毒風險；心衰使用較高劑量無額外效益。CKD 4–5 期需再減量。',
+ qe:'Low–Moderate 低–中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經—抗憂鬱 TCAs / Paroxetine',m:[{tag:'tca'},{d:['paroxetine']}],
+ rec:'Avoid',recZh:'避免使用（低劑量 doxepin ≤6 mg/day 安全性與安慰劑相當，不在此列）',
+ why:'Highly anticholinergic, sedating, and cause orthostatic hypotension.',
+ whyZh:'強抗膽鹼、鎮靜作用明顯，且易致姿勢性低血壓。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經—抗巴金森',m:[{d:['benztropine','trihexyphenidyl']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Not recommended for antipsychotic-induced EPS prevention/treatment; more effective agents exist for Parkinson disease.',
+ whyZh:'不建議用於預防或治療抗精神病藥引起之錐體外症候群；巴金森氏病已有更有效藥物。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經—抗精神病 Antipsychotics',m:[{tag:'ap'}],
+ rec:'Avoid except for FDA-approved indications (schizophrenia, bipolar, Parkinson psychosis, MDD adjunct) or short-term antiemetic use',
+ recZh:'避免使用，除非屬核准適應症（思覺失調、雙相情緒障礙、巴金森精神病、重鬱症輔助治療）或短期止吐；失智／譫妄之行為症狀須非藥物處置失敗且病人有重大自傷／傷人之虞才考慮，且應定期嘗試減藥',
+ why:'Higher stroke risk, faster cognitive decline, and higher mortality in dementia; mortality signal may be independent of dementia.',
+ whyZh:'失智者中風風險、認知退化速度與死亡率較高；死亡風險可能不限於失智族群。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經—巴比妥 Barbiturates',m:[{d:['butalbital','phenobarbital','primidone']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'High rate of physical dependence, tolerance to sleep benefit, and overdose risk even at low doses.',
+ whyZh:'高度生理依賴性、助眠效果易耐受、低劑量即有過量風險。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經—苯二氮平 Benzodiazepines',m:[{tag:'bzd'}],
+ rec:'Avoid',
+ recZh:'避免使用。可屬合理之情境：癲癇、REM 睡眠行為障礙、benzodiazepine／酒精戒斷、重度廣泛性焦慮症、術前麻醉',
+ why:'Older adults have heightened sensitivity and slower metabolism of long-acting agents; all benzodiazepines raise risk of cognitive impairment, delirium, falls, fractures, and motor vehicle crashes. With opioids: profound sedation and respiratory depression risk.',
+ whyZh:'老年人敏感性增加、長效藥代謝減慢；所有 BZD 均增加認知障礙、譫妄、跌倒、骨折與車禍風險；與鴉片類併用可致深度鎮靜與呼吸抑制。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經—Z-drugs',m:[{tag:'zdrug'}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Adverse events similar to benzodiazepines (delirium, falls, fractures, ED visits, crashes) with minimal improvement in sleep latency and duration.',
+ whyZh:'不良反應與 BZD 類似（譫妄、跌倒、骨折、急診與住院、車禍），而對入睡時間與睡眠長度改善極有限。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經',m:[{d:['meprobamate']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'High rate of physical dependence; very sedating.',whyZh:'高度生理依賴性且鎮靜作用強。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'中樞神經',m:[{d:['ergoloid']}],
+ rec:'Avoid',recZh:'避免使用',why:'Lack of efficacy.',whyZh:'缺乏療效。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'內分泌—雄性素',m:[{d:['testosterone','methyltestosterone']}],
+ rec:'Avoid unless confirmed symptomatic hypogonadism',recZh:'避免使用，除非確診且有症狀之性腺功能低下',
+ why:'Potential cardiac problems; risks in men with prostate cancer.',
+ whyZh:'可能有心臟方面疑慮；攝護腺癌病人具潛在風險。',
+ qe:'Moderate 中',sr:'Weak 弱'},
+
+{tb:1,lvl:'avoid',cat:'內分泌—雌激素',m:[{tag:'estrogen-systemic'}],
+ rec:'Do not initiate systemic estrogen; consider deprescribing. Low-dose vaginal preparations acceptable',
+ recZh:'勿起始全身性雌激素（口服／貼片），已使用者考慮減除；低劑量陰道製劑用於性交疼痛、反覆下泌尿道感染等陰道症狀可接受',
+ why:'Carcinogenic potential (breast, endometrium); no cardioprotective or cognitive benefit; HRT started ≥60 carries higher risk of heart disease, stroke, clots, and dementia.',
+ whyZh:'具致癌疑慮（乳房、子宮內膜）；無心血管或認知保護效果；60 歲後起始 HRT 風險大於效益（心臟病、中風、血栓、失智）。',
+ qe:'High 高（口服/貼片）',sr:'Strong 強（口服/貼片）'},
+
+{tb:1,lvl:'avoid',cat:'內分泌—胰島素',m:[{d:['ssi']}],
+ rec:'Avoid sliding-scale-only regimens (short/rapid-acting insulin without basal insulin)',
+ recZh:'避免「僅滑尺式」處方（只依血糖給短效／速效胰島素、未併用基礎胰島素）；含基礎胰島素之處方不在此限',
+ why:'Higher hypoglycemia risk without better hyperglycemia control, regardless of care setting.',
+ whyZh:'低血糖風險較高，且未改善高血糖控制，各照護場域皆然。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'內分泌—磺醯脲類 Sulfonylureas',m:[{tag:'su'}],
+ rec:'Avoid as first/second-line monotherapy or add-on unless substantial barriers to safer agents; if used, prefer short-acting (glipizide) over long-acting (glyburide, glimepiride)',
+ recZh:'勿作為第一／二線單方或加成治療（除非無法使用較安全有效之藥物）；若必須使用，優先短效（glipizide）而非長效（glyburide、glimepiride）',
+ why:'Higher risk of cardiovascular events, all-cause mortality, and hypoglycemia than alternatives; long-acting agents carry higher prolonged-hypoglycemia risk.',
+ whyZh:'心血管事件、全因死亡與低血糖風險高於替代藥物；長效型延長性低血糖風險更高。',
+ qe:'低–高（依結果而異）',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'內分泌',m:[{d:['desiccated_thyroid']}],
+ rec:'Avoid',recZh:'避免使用',why:'Cardiac effect concerns; safer alternatives available.',
+ whyZh:'有心臟方面疑慮；有較安全替代藥物（如 levothyroxine）。',qe:'Low 低',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'內分泌',m:[{d:['megestrol']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Minimal effect on weight; increases thrombotic risk and possibly death in older adults.',
+ whyZh:'增重效果有限；增加血栓事件風險、可能增加死亡率。',qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'內分泌',m:[{d:['somatropin']}],
+ rec:'Avoid except rigorously diagnosed GH deficiency of established etiology',
+ recZh:'避免使用，除非依實證標準嚴格確診之生長激素缺乏症',
+ why:'Small body-composition impact; associated with edema, arthralgia, carpal tunnel, gynecomastia, impaired fasting glucose.',
+ whyZh:'對身體組成影響小，且與水腫、關節痛、腕隧道症候群、男性女乳症、空腹血糖異常相關。',
+ qe:'High 高',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'腸胃—氫離子幫浦抑制劑 PPIs',m:[{tag:'ppi'}],
+ rec:'Avoid scheduled use >8 weeks unless high-risk (chronic NSAID/steroid), erosive or Barrett esophagitis, hypersecretory condition, or demonstrated maintenance need',
+ recZh:'排程使用勿超過 8 週，除非高風險（長期 NSAID／口服類固醇）、糜爛性／Barrett 食道炎、病理性高分泌、或證實需維持治療（停藥試驗失敗、H2RA 無效）',
+ why:'Risk of C. difficile infection, pneumonia, GI malignancies, bone loss and fractures with prolonged use.',
+ whyZh:'長期使用與困難梭菌感染、肺炎、腸胃道惡性腫瘤、骨質流失與骨折風險相關。',
+ qe:'中–高（依結果而異）',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'腸胃',m:[{d:['metoclopramide']}],
+ rec:'Avoid unless for gastroparesis, with use not exceeding 12 weeks except in rare cases',
+ recZh:'避免使用，除非為胃輕癱且療程原則上不超過 12 週',
+ why:'Extrapyramidal effects including tardive dyskinesia; risk greater in frail older adults and with prolonged exposure.',
+ whyZh:'可致錐體外症狀（含遲發性運動障礙）；衰弱老人與長期使用風險更高。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'腸胃—抗痙攣 GI antispasmodics',m:[{d:['atropine','clidinium','dicyclomine','hyoscyamine','scopolamine']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Highly anticholinergic with uncertain effectiveness.',whyZh:'強抗膽鹼且療效不確定。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'腸胃',m:[{d:['mineral_oil']}],
+ rec:'Avoid (oral)',recZh:'避免口服使用',
+ why:'Aspiration potential and adverse effects; safer alternatives available.',
+ whyZh:'有吸入風險與不良反應；有較安全替代品。',qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'泌尿生殖',m:[{d:['desmopressin']}],
+ rec:'Avoid for nocturia or nocturnal polyuria',recZh:'避免用於夜尿或夜間多尿',
+ why:'High hyponatremia risk; safer alternatives (including nonpharmacologic) exist.',
+ whyZh:'低血鈉風險高；夜尿有較安全的（含非藥物）治療方式。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'止痛—非選擇性 NSAIDs',m:[{tag:'nsaid'}],
+ rec:'Avoid chronic use unless alternatives ineffective and patient can take a gastroprotective agent; avoid short-term scheduled use combined with steroids, anticoagulants, or antiplatelets without gastroprotection',
+ recZh:'避免長期使用，除非替代治療無效且病人可併用胃保護劑（PPI 或 misoprostol）；與類固醇、抗凝血或抗血小板藥短期排程併用時亦同',
+ why:'GI bleeding/peptic ulcer risk is elevated in those >75 or on steroids/anticoagulants/antiplatelets; ulcer or bleeding occurs in ~1% at 3–6 months and 2–4% at 1 year of treatment. Can also raise blood pressure and injure kidneys; risks are dose-related.',
+ whyZh:'>75 歲或併用類固醇／抗凝血／抗血小板者腸胃道出血與消化性潰瘍風險升高（治療 3–6 個月約 1%、1 年約 2–4%）；亦可升高血壓、造成腎損傷；風險與劑量相關。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'止痛',m:[{d:['indomethacin','ketorolac']}],
+ rec:'Avoid (indomethacin; ketorolac oral & parenteral)',recZh:'避免使用（indomethacin；ketorolac 口服與注射）',
+ why:'Higher GI bleeding/ulcer and AKI risk; indomethacin has the most adverse effects of all NSAIDs, including CNS effects.',
+ whyZh:'腸胃道出血／潰瘍及急性腎損傷風險增加；indomethacin 為 NSAIDs 中不良反應最多者（含中樞神經副作用）。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'止痛—鴉片類',m:[{d:['meperidine']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Not effective orally at common doses; higher neurotoxicity risk (including delirium) than other opioids; safer alternatives exist.',
+ whyZh:'口服常用劑量無效；神經毒性（含譫妄）風險高於其他鴉片類；有較安全替代品。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:1,lvl:'avoid',cat:'止痛—骨骼肌鬆弛劑',m:[{tag:'smr'}],
+ rec:'Avoid',recZh:'避免使用（用於痙攣 spasticity 的 baclofen、tizanidine 不在此列，但亦有顯著副作用）',
+ why:'Poorly tolerated due to anticholinergic effects, sedation, and fracture risk; effectiveness at tolerable doses is questionable.',
+ whyZh:'抗膽鹼作用、鎮靜與骨折風險使老年人耐受性差；可耐受劑量下療效存疑。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+/* ================= TABLE 2 ================= */
+{tb:2,lvl:'disease',cond:'hf',cat:'心臟衰竭',m:[{d:['cilostazol','dxm_quinidine']}],
+ rec:'Avoid',recZh:'心臟衰竭者避免使用',
+ why:'Potential to increase mortality in older adults with HF (cilostazol); QT-prolongation concern (dextromethorphan-quinidine).',
+ whyZh:'cilostazol 可能增加心衰病人死亡率；dextromethorphan-quinidine 有 QT 延長疑慮。',
+ qe:'Low 低',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'hf',cat:'心臟衰竭',m:[{tag:'nondhpccb'}],
+ rec:'Avoid in HF with reduced ejection fraction (HFrEF)',recZh:'HFrEF 病人避免使用（diltiazem、verapamil）',
+ why:'Potential to promote fluid retention and exacerbate heart failure.',
+ whyZh:'可能促進體液滯留並加重心臟衰竭。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'hf',cat:'心臟衰竭',m:[{d:['dronedarone']},{tag:'nsaid'},{tag:'cox2'},{tag:'tzd'}],
+ rec:'Use with caution if asymptomatic; avoid if symptomatic HF',
+ recZh:'無症狀心衰者謹慎使用；有症狀心衰者避免（dronedarone、NSAIDs／COX-2、pioglitazone）',
+ why:'Fluid retention and HF exacerbation (NSAIDs/COX-2, thiazolidinediones); increased mortality concern (dronedarone).',
+ whyZh:'NSAIDs／COX-2 與 TZD 可致體液滯留、加重心衰；dronedarone 有死亡率增加疑慮。',
+ qe:'中–高（依藥物而異）',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'syncope',cat:'暈厥',m:[{tag:'syncope-ap'},{tag:'achei'},{tag:'alpha1'},{tag:'tca3'}],
+ rec:'Avoid',recZh:'有暈厥病史者避免使用',
+ why:'Listed antipsychotics and tertiary TCAs raise orthostatic hypotension risk; AChEIs cause bradycardia; alpha-1 blockers cause orthostatic BP changes.',
+ whyZh:'chlorpromazine／olanzapine 與三級 TCA 增加姿勢性低血壓；乙醯膽鹼酯酶抑制劑（donepezil 等）致心搏過緩；α-1 阻斷劑造成姿勢性血壓變化。依暈厥機轉判斷。',
+ qe:'High 高',sr:'AChEI／TCA：強；其餘：弱'},
+
+{tb:2,lvl:'disease',cond:'delirium',cat:'譫妄',m:[{tag:'ach'},{tag:'ap'},{tag:'bzd'},{tag:'steroid'},{tag:'h2'},{tag:'zdrug'},{tag:'opioid'}],
+ rec:'Avoid in older adults with or at high risk of delirium (exceptions per rationale)',
+ recZh:'譫妄或高風險者避免：抗膽鹼藥、抗精神病藥、BZD、口服／注射類固醇、H2 拮抗劑、Z-drugs、鴉片類',
+ why:'Potential to induce or worsen delirium. Antipsychotics only if nonpharmacologic options failed and patient threatens substantial harm. Steroids: lowest dose, shortest duration. Opioids: use balanced multimodal pain strategy.',
+ whyZh:'可誘發或加重譫妄。抗精神病藥僅限非藥物處置失敗且有重大自傷／傷人之虞；類固醇用最低劑量、最短療程並監測；鴉片類採多模式止痛、儘量減量。',
+ qe:'H2RA：低；其餘：中',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'dementia',cat:'失智／認知障礙',m:[{tag:'ach'},{tag:'ap'},{tag:'bzd'},{tag:'zdrug'}],
+ rec:'Avoid',recZh:'失智／認知障礙者避免：抗膽鹼藥、抗精神病藥（長期或持續 PRN）、BZD、Z-drugs',
+ why:'Adverse CNS effects. Antipsychotics: higher stroke risk, faster cognitive decline, and mortality in dementia; reserve for failure of behavioral interventions with threat of substantial harm, with periodic deprescribing.',
+ whyZh:'中樞神經不良反應。抗精神病藥於失智者增加中風、認知退化與死亡風險；僅限行為介入失敗且有重大危害之虞時短期最低劑量使用，並定期嘗試減藥。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'falls',cat:'跌倒／骨折病史',m:[{tag:'ach'},{tag:'snri'},{tag:'ssri'},{tag:'tca'},{tag:'aed'},{tag:'ap'},{tag:'bzd'},{tag:'zdrug'},{tag:'opioid'}],
+ rec:'Avoid unless safer alternatives unavailable; antiepileptics OK for seizure/mood disorders; opioids OK for severe acute pain',
+ recZh:'除非無更安全替代否則避免；抗癲癇藥用於癲癇／情緒障礙、鴉片類用於重度急性疼痛屬例外',
+ why:'May cause ataxia, impaired psychomotor function, syncope, and further falls. SNRIs may increase fall risk; shorter-acting benzodiazepines are not safer. If one must be used, reduce other CNS-active drugs and implement fall-risk strategies.',
+ whyZh:'可致運動失調、精神運動功能受損、暈厥與再跌倒；SNRI 可能增加跌倒風險；短效 BZD 並不比長效安全。若必須使用，應減少其他中樞神經作用藥物並落實防跌措施。',
+ qe:'抗憂鬱藥／鴉片類：中；其餘：高',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'pd',cat:'巴金森氏病',m:[{tag:'pd-antiemetic'},{tag:'ap',not:'ap-pd-ok'}],
+ rec:'Avoid (exceptions: clozapine, pimavanserin, quetiapine)',
+ recZh:'避免使用（止吐藥 metoclopramide／prochlorperazine／promethazine 與多數抗精神病藥）；例外：clozapine、pimavanserin、quetiapine',
+ why:'Dopamine-receptor antagonists can worsen parkinsonian symptoms.',
+ whyZh:'多巴胺受體拮抗劑可能惡化巴金森症狀。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'ulcer',cat:'胃／十二指腸潰瘍病史',m:[{d:['aspirin']},{tag:'nsaid'}],
+ rec:'Avoid unless alternatives ineffective and patient can take a gastroprotective agent',
+ recZh:'避免使用，除非替代治療無效且可併用胃保護劑（PPI 或 misoprostol）',
+ why:'May exacerbate existing ulcers or cause new ones.',whyZh:'可能使原有潰瘍惡化或產生新潰瘍。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'ui',cat:'尿失禁（女性）',m:[{tag:'alpha1'},{tag:'estrogen-systemic'}],
+ rec:'Avoid in women',recZh:'女性避免使用（α-1 阻斷劑；口服／經皮雌激素，不含陰道製劑）',
+ why:'Alpha-1 blockers aggravate incontinence; oral estrogen lacks efficacy.',
+ whyZh:'α-1 阻斷劑會加重尿失禁；口服雌激素缺乏療效。',
+ qe:'α-1 阻斷劑：中；雌激素：高',sr:'Strong 強'},
+
+{tb:2,lvl:'disease',cond:'bph',cat:'下泌尿道症狀／攝護腺肥大（男性）',m:[{tag:'ach',not:'ui-antimuscarinic'}],
+ rec:'Avoid strongly anticholinergic drugs in men (except antimuscarinics for urinary incontinence)',
+ recZh:'男性避免強抗膽鹼藥物（治療尿失禁之抗蕈毒鹼藥除外）',
+ why:'May decrease urinary flow and cause urinary retention.',
+ whyZh:'可能減少尿流並導致尿滯留。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+/* ================= TABLE 3 ================= */
+{tb:3,lvl:'caution',cat:'抗血栓',m:[{d:['dabigatran']}],
+ rec:'Use caution when selecting over other DOACs (e.g., apixaban) for long-term AF/VTE treatment',
+ recZh:'長期治療心房顫動／VTE 時，相較其他 DOAC（如 apixaban）應謹慎選用',
+ why:'Higher GI bleeding risk than warfarin, and higher GI/major bleeding than apixaban in older adults.',
+ whyZh:'腸胃道出血風險高於 warfarin；觀察性研究顯示腸胃道與大出血風險高於 apixaban。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:3,lvl:'caution',cat:'抗血小板',m:[{d:['prasugrel','ticagrelor']}],
+ rec:'Use with caution, particularly in adults ≥75; consider prasugrel 5 mg in those ≥75',
+ recZh:'謹慎使用，尤其 ≥75 歲；≥75 歲若用 prasugrel 考慮低劑量 5 mg',
+ why:'Higher major bleeding risk than clopidogrel, especially ≥75; may be offset by cardiovascular benefit in selected patients.',
+ whyZh:'大出血風險高於 clopidogrel（≥75 歲尤甚）；特定病人之心血管效益可能抵銷此風險。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:3,lvl:'caution',cat:'SIADH／低血鈉風險藥物',m:[{d:['mirtazapine']},{tag:'snri'},{tag:'ssri'},{tag:'tca'},{d:['carbamazepine','oxcarbazepine']},{tag:'ap'},{tag:'diuretic'},{d:['tramadol']}],
+ rec:'Use with caution; monitor sodium closely when starting or changing doses',
+ recZh:'謹慎使用；起始或調整劑量時密切監測血鈉（mirtazapine、SNRI、SSRI、TCA、carbamazepine、oxcarbazepine、抗精神病藥、利尿劑、tramadol）',
+ why:'May exacerbate or cause SIADH or hyponatremia.',whyZh:'可能造成或加重 SIADH／低血鈉。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:3,lvl:'caution',cat:'中樞神經',m:[{d:['dxm_quinidine']}],
+ rec:'Use with caution',recZh:'謹慎使用',
+ why:'Limited efficacy for behavioral symptoms of dementia (pseudobulbar affect excluded); fall risk and significant drug/HF interactions.',
+ whyZh:'對失智行為症狀療效有限（假性延髓情緒不在此限）；可能增加跌倒風險，並有重要藥物交互與心衰疑慮。',
+ qe:'Moderate 中',sr:'Strong 強'},
+
+{tb:3,lvl:'caution',cat:'抗感染',m:[{d:['tmpsmx']}],
+ rec:'Use caution in patients on an ACEI/ARB/ARNI with decreased CrCl',
+ recZh:'併用 ACEI／ARB／ARNI 且腎功能下降者謹慎使用',
+ why:'Increased hyperkalemia risk with concurrent RAS inhibitors and decreased CrCl.',
+ whyZh:'與 RAS 抑制劑併用且 CrCl 下降時，高血鉀風險增加。',
+ qe:'Low 低',sr:'Strong 強'},
+
+{tb:3,lvl:'caution',cat:'內分泌—SGLT2 抑制劑',m:[{tag:'sglt2'}],
+ rec:'Use with caution; monitor for urogenital infections and ketoacidosis',
+ recZh:'謹慎使用；監測泌尿生殖道感染與酮酸中毒',
+ why:'Older adults at higher risk of urogenital infections (especially women in the first month) and euglycemic DKA.',
+ whyZh:'老年人泌尿生殖道感染風險較高（女性治療首月尤甚），亦有正常血糖酮酸中毒風險。',
+ qe:'Moderate 中',sr:'Weak 弱'},
+
+/* ================= TABLE 5 (renal) ================= */
+{tb:5,lvl:'renal',cat:'抗感染',m:[{d:['ciprofloxacin']}],thr:30,
+ rec:'Reduce dose when CrCl <30 mL/min (for common-infection dosing)',recZh:'CrCl <30：常用感染治療劑量需減量',
+ why:'Increased CNS effects (seizures, confusion) and tendon rupture risk.',whyZh:'中樞神經副作用（癲癇、意識混亂）與肌腱斷裂風險增加。',
+ qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'抗感染',m:[{d:['nitrofurantoin']}],thr:30,
+ rec:'Avoid if CrCl <30 mL/min',recZh:'CrCl <30：避免使用',
+ why:'Pulmonary toxicity, hepatotoxicity, peripheral neuropathy, especially long-term.',whyZh:'肺毒性、肝毒性與周邊神經病變風險，長期使用尤甚。',
+ qe:'Low 低',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'抗感染',m:[{d:['tmpsmx']}],thr:30,
+ rec:'Reduce dose if CrCl 15–29; avoid if CrCl <15',recZh:'CrCl 15–29：減量；CrCl <15：避免',
+ why:'Worsening kidney function and hyperkalemia, especially with concurrent ACEI/ARB/ARNI.',whyZh:'腎功能惡化與高血鉀風險，併用 RAS 抑制劑時尤甚。',
+ qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'心血管／抗血栓',m:[{d:['amiloride']}],thr:30,
+ rec:'Avoid if CrCl <30 mL/min',recZh:'CrCl <30：避免使用',
+ why:'Hyperkalemia and hyponatremia.',whyZh:'高血鉀與低血鈉。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'心血管／抗血栓',m:[{d:['dabigatran']}],thr:30,
+ rec:'Avoid when CrCl <30; adjust dose for drug interactions when CrCl >30',recZh:'CrCl <30：避免；CrCl >30 併有交互作用藥物時調整劑量',
+ why:'Insufficient efficacy/safety evidence below CrCl 30 mL/min.',whyZh:'CrCl <30 缺乏療效與安全性證據。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'心血管',m:[{d:['dofetilide']}],thr:60,
+ rec:'Reduce dose if CrCl 20–59; avoid if CrCl <20',recZh:'CrCl 20–59：減量；CrCl <20：避免',
+ why:'QTc prolongation and torsades de pointes.',whyZh:'QTc 延長與 torsades de pointes。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'抗血栓',m:[{d:['edoxaban']}],thr:50,
+ rec:'Reduce dose if CrCl 15–50; avoid if CrCl <15 or >95',recZh:'CrCl 15–50：減量；CrCl <15 或 >95：避免',
+ why:'Lack of efficacy/safety evidence at extremes of kidney function.',whyZh:'腎功能過低或過高時缺乏療效／安全性證據。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'抗血栓',m:[{d:['enoxaparin']}],thr:30,
+ rec:'Reduce dose if CrCl <30',recZh:'CrCl <30：減量',
+ why:'Increased bleeding risk.',whyZh:'出血風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'抗血栓',m:[{d:['fondaparinux']}],thr:30,
+ rec:'Avoid if CrCl <30',recZh:'CrCl <30：避免',
+ why:'Increased bleeding risk.',whyZh:'出血風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'抗血栓',m:[{d:['rivaroxaban']}],thr:50,
+ rec:'Reduce dose if CrCl 15–50 (per indication); avoid if CrCl <15',recZh:'CrCl 15–50：依適應症減量；CrCl <15：避免',
+ why:'Limited evidence for CrCl 15–30; no efficacy/safety evidence below 15.',whyZh:'CrCl 15–30 證據有限；<15 缺乏療效／安全性證據。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'心血管',m:[{d:['spironolactone']}],thr:30,
+ rec:'Avoid if CrCl <30',recZh:'CrCl <30：避免',
+ why:'Hyperkalemia.',whyZh:'高血鉀。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'心血管',m:[{d:['triamterene']}],thr:30,
+ rec:'Avoid if CrCl <30',recZh:'CrCl <30：避免',
+ why:'Hyperkalemia and hyponatremia.',whyZh:'高血鉀與低血鈉。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'中樞神經／止痛',m:[{d:['baclofen']}],thr:60,unit:'eGFR',
+ rec:'Avoid if eGFR <60; if unavoidable, lowest effective dose and monitor for CNS toxicity',
+ recZh:'eGFR <60：避免；若無法避免，用最低有效劑量並監測中樞神經毒性（意識變化）',
+ why:'Higher risk of encephalopathy requiring hospitalization with impaired kidney function or dialysis.',
+ whyZh:'腎功能不全或透析者腦病變（需住院）風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'中樞神經',m:[{d:['duloxetine']}],thr:30,
+ rec:'Avoid if CrCl <30',recZh:'CrCl <30：避免',
+ why:'Increased GI adverse effects (nausea, diarrhea).',whyZh:'腸胃道不良反應（噁心、腹瀉）增加。',qe:'Moderate 中',sr:'Weak 弱'},
+{tb:5,lvl:'renal',cat:'中樞神經',m:[{d:['gabapentin']}],thr:60,
+ rec:'Reduce dose if CrCl <60',recZh:'CrCl <60：減量',
+ why:'CNS adverse effects.',whyZh:'中樞神經不良反應。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'中樞神經',m:[{d:['levetiracetam']}],thr:80,thrEq:true,
+ rec:'Reduce dose if CrCl ≤80',recZh:'CrCl ≤80：減量',
+ why:'CNS adverse effects.',whyZh:'中樞神經不良反應。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'止痛',m:[{tag:'nsaid'},{tag:'cox2'}],thr:30,
+ rec:'Avoid if CrCl <30 (oral & parenteral, non-selective and COX-2)',recZh:'CrCl <30：避免（口服與注射、非選擇性與 COX-2 皆同）',
+ why:'May increase risk of acute kidney injury and further decline of kidney function.',whyZh:'可能增加急性腎損傷與腎功能持續惡化之風險。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'中樞神經',m:[{d:['pregabalin']}],thr:60,
+ rec:'Reduce dose if CrCl <60',recZh:'CrCl <60：減量',
+ why:'CNS adverse effects.',whyZh:'中樞神經不良反應。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'止痛',m:[{d:['tramadol']}],thr:30,
+ rec:'IR: reduce dose; ER: avoid if CrCl <30',recZh:'CrCl <30：速放劑型減量；長效劑型避免',
+ why:'CNS adverse effects.',whyZh:'中樞神經不良反應。',qe:'Low 低',sr:'Weak 弱'},
+{tb:5,lvl:'renal',cat:'腸胃',m:[{d:['cimetidine']}],thr:50,
+ rec:'Reduce dose if CrCl <50',recZh:'CrCl <50：減量',
+ why:'Mental status changes.',whyZh:'精神狀態改變。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'腸胃',m:[{d:['famotidine']}],thr:50,
+ rec:'Reduce dose if CrCl <50',recZh:'CrCl <50：減量',
+ why:'Mental status changes.',whyZh:'精神狀態改變。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'腸胃',m:[{d:['nizatidine']}],thr:50,
+ rec:'Reduce dose if CrCl <50',recZh:'CrCl <50：減量',
+ why:'Mental status changes.',whyZh:'精神狀態改變。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'高尿酸',m:[{d:['colchicine']}],thr:30,
+ rec:'Reduce dose if CrCl <30; monitor for adverse effects',recZh:'CrCl <30：減量並監測不良反應',
+ why:'GI, neuromuscular, and bone marrow toxicity.',whyZh:'腸胃道、神經肌肉與骨髓毒性。',qe:'Moderate 中',sr:'Strong 強'},
+{tb:5,lvl:'renal',cat:'高尿酸',m:[{d:['probenecid']}],thr:30,
+ rec:'Avoid if CrCl <30',recZh:'CrCl <30：避免',
+ why:'Loss of effectiveness.',whyZh:'失去療效。',qe:'Moderate 中',sr:'Strong 強'},
+
+/* ================= PIM-TAIWAN 2018 — Table 1 一般避免 ================= */
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'心血管',m:[{d:['spironolactone']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Risk of hyperkalemia.',whyZh:'高血鉀風險。',
+ alt:'改用其他利尿劑，或規律監測血鉀。Use other diuretics or regularly monitor serum potassium.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'心血管—抗心律不整',m:[{d:['amiodarone']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Greater toxicities than other antiarrhythmics used in atrial fibrillation.',
+ whyZh:'用於心房顫動之毒性高於其他抗心律不整藥。',
+ alt:'心房顫動改用其他節律控制藥物。Use other rhythm-control medications for AF.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'心血管—降壓',m:[{d:['clonidine']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'High risk of adverse CNS effects; may cause orthostatic hypotension and bradycardia.',
+ whyZh:'中樞神經副作用風險高；可致姿勢性低血壓與心搏過緩。',
+ alt:'依指引改用其他第一線降壓藥。Use guideline-recommended first-line antihypertensives.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'心血管',m:[{d:['digoxin']}],
+ rec:'Avoid >0.125 mg/day; should not be used for AF',recZh:'避免 >0.125 mg/day；不建議用於心房顫動',
+ why:'AF use may be associated with higher mortality; in HF, higher doses associated with higher mortality.',
+ whyZh:'用於心房顫動可能與較高死亡率相關；心衰使用較高劑量亦與死亡率上升相關。',
+ alt:'心房顫動改用其他節律控制藥物（amiodarone 除外）。Use other rhythm-control agents (except amiodarone) for AF.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'心血管—α-1 阻斷劑',m:[{tag:'alpha1'}],
+ rec:'Avoid as antihypertensive',recZh:'避免作為降壓藥（prazosin、doxazosin、terazosin）',
+ why:'High risk of orthostatic hypotension; not first-line treatment for hypertension.',
+ whyZh:'姿勢性低血壓風險高；非高血壓第一線治療。',
+ alt:'依指引改用其他第一線降壓藥。Use guideline-recommended first-line antihypertensives.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'內分泌—雄性素',m:[{d:['testosterone','methyltestosterone']}],
+ rec:'Avoid unless absolutely indicated',recZh:'避免使用，除非有絕對適應症',
+ why:'Potentially increased risk of cardiac problems; contraindicated in men with prostate malignancy.',
+ whyZh:'可能增加心臟問題風險；攝護腺惡性腫瘤男性為禁忌。',
+ alt:'除非絕對適應症否則避免。Avoid use unless absolutely indicated.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'內分泌—雌激素（含複方）',m:[{tag:'estrogen-systemic'}],
+ rec:'Avoid systemic estrogens (including combinations)',recZh:'避免全身性雌激素（含複方）',
+ why:'Carcinogenic potential (breast and endometrium); lack of cardiovascular or cognitive protective effects in older women.',
+ whyZh:'具致癌疑慮（乳房、子宮內膜）；對年長女性無心血管或認知保護效果。',
+ alt:'陰道乾澀可用陰道雌激素；乳癌病史者應與醫療人員討論低劑量陰道雌激素之風險效益。Vaginal estrogens are safe for vaginal dryness; discuss risk–benefit if history of breast cancer.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'內分泌—長效磺醯脲類',m:[{d:['glyburide','chlorpropamide']}],
+ rec:'Avoid (long-duration sulfonylureas)',recZh:'避免使用（glyburide／glibenclamide、chlorpropamide）',
+ why:'Long half-life; can cause prolonged hypoglycemia.',whyZh:'半衰期長，可致延長性低血糖。',
+ alt:'改用其他口服降血糖藥。Use other oral hypoglycemic agents.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'內分泌—TZD',m:[{d:['pioglitazone']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Can lead to osteoporosis and fractures in women; exacerbation of heart failure.',
+ whyZh:'女性骨質疏鬆與骨折風險；可加重心臟衰竭。',
+ alt:'有心衰或骨鬆者改用其他口服降血糖藥。Use other oral hypoglycemic agents if HF or osteoporosis.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'腸胃—H2 受體拮抗劑',m:[{tag:'h2'}],
+ rec:'Avoid (cimetidine, ranitidine, famotidine, nizatidine)',recZh:'避免使用（cimetidine、ranitidine、famotidine、nizatidine）',
+ why:'CNS adverse effects with potential to induce or worsen delirium.',
+ whyZh:'中樞神經副作用，可誘發或加重譫妄。',
+ alt:'改用 PPI（除特殊情況外勿超過 8 週）。Proton-pump inhibitors (avoid >8 weeks unless special circumstances).'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'腸胃',m:[{d:['metoclopramide']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Can cause extrapyramidal effects.',whyZh:'可致錐體外症狀。',
+ alt:'Domperidone、mosapride。'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'腸胃—複方抗膽鹼',m:[{d:['clidinium']}],
+ rec:'Avoid long-term use',recZh:'避免長期使用（clidinium-chlordiazepoxide 複方）',
+ why:'High anticholinergic effects: confusion, urinary retention, constipation, dry mouth.',
+ whyZh:'高抗膽鹼作用：意識混亂、尿滯留、便祕、口乾等。',
+ alt:'避免長期使用。Avoid long-term use.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'泌尿生殖—頻尿／尿失禁用藥',m:[{d:['oxybutynin','tolterodine']}],
+ rec:'Avoid',recZh:'避免使用（oxybutynin、tolterodine）',
+ why:'High anticholinergic effects: confusion, urinary retention, constipation, dry mouth.',
+ whyZh:'高抗膽鹼作用：意識混亂、尿滯留、便祕、口乾等。',
+ alt:'改用抗膽鹼活性較低之藥物。Use other drugs with less anticholinergic activity.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—SSRI',m:[{d:['paroxetine']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'High anticholinergic effects (sedation, urinary retention, orthostatic hypotension); increased risk of skin/mucosa bleeding and hyponatremia.',
+ whyZh:'高抗膽鹼作用（鎮靜、尿滯留、姿勢性低血壓）；增加皮膚黏膜出血與低血鈉風險。',
+ alt:'改用其他抗憂鬱劑（TCA 除外）。Use other antidepressants, except TCAs.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—抗憂鬱（TCA／四環類／複方）',m:[{d:['deanxit','maprotiline','imipramine','clomipramine','amitriptyline','doxepin']}],
+ rec:'Avoid',recZh:'避免使用（melitracen 複方、maprotiline、imipramine、clomipramine、amitriptyline、doxepin >6mg）',
+ why:'High anticholinergic effects that may lead to sedation, urinary retention, and orthostatic hypotension.',
+ whyZh:'高抗膽鹼作用：鎮靜、尿滯留、姿勢性低血壓。',
+ alt:'改用其他抗憂鬱劑（paroxetine 除外）。Use other antidepressants, except paroxetine.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—抗巴金森抗膽鹼藥',m:[{d:['trihexyphenidyl','biperiden']}],
+ rec:'Avoid',recZh:'避免使用（trihexyphenidyl、biperiden）',
+ why:'High anticholinergic effects: confusion, urinary retention, constipation, dry mouth.',
+ whyZh:'高抗膽鹼作用：意識混亂、尿滯留、便祕、口乾等。',
+ alt:'改用其他抗巴金森藥物。Use other antiparkinsonian drugs.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—第一代抗精神病',m:[{d:['chlorpromazine','levomepromazine','fluphenazine','perphenazine','trifluoperazine','thioridazine','haloperidol','flupentixol','chlorprothixene','pimozide','loxapine','sulpiride']}],
+ rec:'Avoid',recZh:'避免使用',
+ why:'Increased risk of cerebrovascular accident.',whyZh:'增加腦血管事件風險。',
+ alt:'失智／譫妄之行為症狀以非藥物介入（行為治療、心理社會介入、現實導向、身體活動）為先；除非已失敗或不可行且病人有重大自傷／傷人之虞。'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—第二代抗精神病（不含 quetiapine）',m:[{d:['ziprasidone','lurasidone','clozapine','olanzapine','amisulpride','risperidone','zotepine','aripiprazole','paliperidone']}],
+ rec:'Avoid',recZh:'避免使用（PIM-Taiwan 未將 quetiapine 列入一般避免名單，但仍應監測不良反應並避免長期使用）',
+ why:'Increased risk of cerebrovascular accident (stroke) and greater rate of cognitive decline and mortality in persons with dementia.',
+ whyZh:'增加腦血管事件（中風）風險；失智者認知退化較快、死亡率較高。',
+ alt:'失智／譫妄之行為症狀以非藥物介入為先；除非已失敗或不可行且病人有重大自傷／傷人之虞。'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—苯二氮平',m:[{tag:'bzd'}],
+ rec:'Avoid as possible; low-dose and short-term use as needed',recZh:'盡量避免；必要時以低劑量、短期使用',
+ why:'Increased risk of cognitive impairment, confusion, falls, fractures, and motor vehicle accidents.',
+ whyZh:'增加認知障礙、意識混亂、跌倒、骨折與車禍風險。',
+ alt:'盡量避免；必要時低劑量、短期。Avoid as possible; low-dose, short-term as needed.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'神經—非苯二氮平安眠藥',m:[{tag:'zdrug'}],
+ rec:'Avoid as possible; low-dose and short-term use as needed',recZh:'盡量避免；必要時以低劑量、短期使用（zopiclone、zolpidem、zaleplon、eszopiclone）',
+ why:'Increased risk of cognitive impairment, confusion, falls, fractures, and motor vehicle accidents.',
+ whyZh:'增加認知障礙、意識混亂、跌倒、骨折與車禍風險。',
+ alt:'盡量避免；必要時低劑量、短期。Avoid as possible; low-dose, short-term as needed.'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'止痛—非 COX-2 NSAIDs',m:[{tag:'nsaid'}],
+ rec:'Avoid; use acetaminophen or COX-2 selective NSAIDs; avoid long-term use',
+ recZh:'避免使用；改用 acetaminophen 或 COX-2 選擇性 NSAID，並避免長期使用',
+ why:'Increased risk of GI bleeding or peptic ulcer disease (PPI/misoprostol reduces but does not fully prevent); increased risk of acute kidney injury.',
+ whyZh:'增加腸胃道出血／消化性潰瘍風險（併用 PPI 或 misoprostol 可降低但無法完全預防）；增加急性腎損傷風險。',
+ alt:'Acetaminophen 或 COX-2 選擇性 NSAID；避免長期使用。'},
+{src:'tw',tb:1,lvl:'avoid',tlabel:'PIM-TW 表1 · 一般避免',cat:'呼吸—第一代抗組織胺',m:[{tag:'ah'}],
+ rec:'Avoid',recZh:'避免使用（含複方製劑）',
+ why:'High anticholinergic effects: confusion, urinary retention, constipation, dry mouth.',
+ whyZh:'高抗膽鹼作用：意識混亂、尿滯留、便祕、口乾等。',
+ alt:'改用第二代抗組織胺。Use second-generation antihistamines.'},
+
+/* ================= PIM-TAIWAN 2018 — Table 2 疾病相關 ================= */
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'hf',cat:'心臟衰竭',m:[{tag:'nsaid'},{tag:'cox2'},{tag:'nondhpccb'},{tag:'tzd'}],
+ rec:'Avoid',recZh:'心臟衰竭者避免：NSAIDs（非 COX-2 與 COX-2）、非二氫吡啶類鈣離子阻斷劑、TZD（pioglitazone、rosiglitazone）',
+ why:'Potential to promote fluid retention and exacerbate heart failure.',
+ whyZh:'可致體液滯留並加重心臟衰竭。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'syncope',cat:'暈厥',m:[{tag:'achei'},{tag:'alpha1'}],
+ rec:'Avoid',recZh:'有暈厥病史者避免：乙醯膽鹼酯酶抑制劑、周邊 α-1 阻斷劑',
+ why:'Increases risk of orthostatic hypotension or bradycardia.',
+ whyZh:'增加姿勢性低血壓或心搏過緩風險。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:['delirium','dementia'],cat:'譫妄／失智／認知障礙',m:[{tag:'ach'},{tag:'ap'}],
+ rec:'Avoid',recZh:'譫妄、失智或認知障礙者避免：強抗膽鹼藥物、抗精神病藥',
+ why:'Potential to induce or worsen delirium. Avoid antipsychotics for behavioral problems unless nonpharmacological options have failed or are not possible and the older adult is threatening substantial harm.',
+ whyZh:'可誘發或加重譫妄。行為症狀應先採非藥物介入；僅於失敗或不可行且有重大自傷／傷人之虞時使用抗精神病藥。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'falls',cat:'跌倒／骨折病史',m:[{tag:'ap'},{tag:'bzd'},{tag:'zdrug'}],
+ rec:'Avoid',recZh:'跌倒或骨折病史者避免：抗精神病藥、苯二氮平、非苯二氮平安眠藥',
+ why:'May cause ataxia, impaired psychomotor function, additional falls; shorter-acting benzodiazepines are not safer than long-acting ones. If one must be used, reduce other CNS-active medications and implement fall-risk strategies.',
+ whyZh:'可致運動失調、精神運動功能受損與再次跌倒；短效 BZD 並不比長效安全。若必須使用，應減少其他增加跌倒風險之中樞神經作用藥物並落實防跌措施。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'pd',cat:'巴金森氏病',m:[{tag:'ap',not:'ap-pd-ok'},{d:['prochlorperazine','promethazine']}],
+ rec:'Avoid (except quetiapine and clozapine)',recZh:'避免使用（quetiapine、clozapine 除外）；止吐藥 prochlorperazine、promethazine 亦避免',
+ why:'Dopamine-receptor antagonists with potential to worsen parkinsonian symptoms. Quetiapine, aripiprazole, clozapine appear less likely to precipitate worsening.',
+ whyZh:'多巴胺受體拮抗劑可能惡化巴金森症狀；quetiapine、aripiprazole、clozapine 較不易造成惡化。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'ulcer',cat:'胃／十二指腸潰瘍病史',m:[{d:['aspirin']},{tag:'nsaid'}],
+ rec:'Avoid',recZh:'避免：aspirin（>325 mg/day）、非 COX-2 NSAIDs',
+ why:'May exacerbate existing ulcers or cause new or additional ulcers.',
+ whyZh:'可能使原有潰瘍惡化或產生新潰瘍。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'bph',cat:'下泌尿道症狀／攝護腺肥大',m:[{tag:'ach',not:'ui-antimuscarinic'}],
+ rec:'Avoid strongly anticholinergic drugs (except antimuscarinics for urinary incontinence)',
+ recZh:'避免強抗膽鹼藥物（治療尿失禁之抗蕈毒鹼藥除外）',
+ why:'May decrease urinary flow and cause urinary retention.',
+ whyZh:'可能減少尿流並導致尿滯留。'},
+{src:'tw',tb:2,lvl:'disease',tlabel:'PIM-TW 表2 · 疾病相關',cond:'copd',cat:'氣喘／慢性阻塞性肺病',m:[{tag:'bb-ns'}],
+ rec:'Avoid nonselective beta-blockers',recZh:'避免非選擇性 β 阻斷劑（原文名單：alprenolol、carteolol、pindolol、sotalol）',
+ why:'May worsen respiratory symptoms.',whyZh:'可能惡化呼吸道症狀。'},
+{src:'tw',tb:5,lvl:'renal',tlabel:'PIM-TW 表2 · 慢性腎臟病',cat:'止痛',m:[{tag:'nsaid'},{tag:'cox2'}],thr:30,
+ rec:'Avoid if CrCl <30 mL/min (non-COX-2 and COX-2, oral and parenteral)',
+ recZh:'CrCl <30：避免（非 COX-2 與 COX-2、口服與注射皆同）',
+ why:'May increase risk of acute kidney injury and further decline of renal function.',
+ whyZh:'可能增加急性腎損傷與腎功能持續惡化風險。'}
+];
+
+/* =========================================================
+   TABLE 4 — drug–drug interaction rules
+   A/B: {tags:[...]} or {d:[...]}; both sides must match distinct drugs
+========================================================= */
+const DDI=[
+{name:'RAS 抑制劑 × RAS 抑制劑／保鉀利尿劑',A:{tags:['ras','ksparing']},B:{tags:['ras','ksparing']},samePool:true,condNote:'ckd3',
+ rec:'Avoid routine concurrent use of ≥2 RAS inhibitors, or a RAS inhibitor + potassium-sparing diuretic, in CKD ≥3a',
+ recZh:'CKD ≥3a 期病人避免常規併用兩種以上 RAS 抑制劑、或 RAS 抑制劑＋保鉀利尿劑',
+ why:'Increased hyperkalemia risk.',whyZh:'高血鉀風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'鴉片類 × 苯二氮平',A:{tags:['opioid']},B:{tags:['bzd']},
+ rec:'Avoid',recZh:'避免併用',
+ why:'Increased risk of overdose and adverse events.',whyZh:'過量與不良事件風險增加（深度鎮靜、呼吸抑制）。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'鴉片類 × Gabapentinoid',A:{tags:['opioid']},B:{tags:['gabapentinoid']},
+ rec:'Avoid (exceptions: transitioning off opioids, or using gabapentinoids to lower opioid dose — with caution)',
+ recZh:'避免併用（例外：由鴉片類轉換治療、或以 gabapentinoid 協助鴉片類減量，仍須謹慎）',
+ why:'Severe sedation-related events including respiratory depression and death.',whyZh:'嚴重鎮靜相關事件風險（含呼吸抑制與死亡）。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'抗膽鹼 × 抗膽鹼',A:{tags:['ach']},B:{tags:['ach']},
+ rec:'Avoid; minimize the number of anticholinergic drugs',recZh:'避免併用，將抗膽鹼藥物數量降到最低',
+ why:'Multiple anticholinergics increase risk of cognitive decline, delirium, and falls or fractures.',
+ whyZh:'多重抗膽鹼藥物增加認知退化、譫妄與跌倒／骨折風險。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'Lithium × ACEI／ARB／ARNI',A:{d:['lithium']},B:{tags:['ras']},
+ rec:'Avoid; monitor lithium concentrations',recZh:'避免併用；若併用需監測鋰鹽濃度',
+ why:'Increased lithium toxicity risk.',whyZh:'鋰中毒風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'Lithium × 環利尿劑',A:{d:['lithium']},B:{tags:['loop']},
+ rec:'Avoid; monitor lithium concentrations',recZh:'避免併用；若併用需監測鋰鹽濃度',
+ why:'Increased lithium toxicity risk.',whyZh:'鋰中毒風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'α-1 阻斷劑 × 環利尿劑（女性）',A:{tags:['alpha1']},B:{tags:['loop']},sex:'F',
+ rec:'Avoid in older women unless conditions warrant both',recZh:'年長女性避免併用，除非病情確需兩者',
+ why:'Increased urinary incontinence risk in older women.',whyZh:'增加年長女性尿失禁風險。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'Phenytoin × TMP-SMX',A:{tags:['phenytoin']},B:{tags:['tmpsmx']},
+ rec:'Avoid',recZh:'避免併用',
+ why:'Increased phenytoin toxicity risk.',whyZh:'phenytoin 中毒風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'Theophylline × Cimetidine',A:{tags:['theophylline']},B:{tags:['cimetidine']},
+ rec:'Avoid',recZh:'避免併用',
+ why:'Increased theophylline toxicity risk.',whyZh:'theophylline 中毒風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'Theophylline × Ciprofloxacin',A:{tags:['theophylline']},B:{tags:['cipro']},
+ rec:'Avoid',recZh:'避免併用',
+ why:'Increased theophylline toxicity risk.',whyZh:'theophylline 中毒風險增加。',qe:'Moderate 中',sr:'Strong 強'},
+{name:'Warfarin × Amiodarone／Ciprofloxacin／Macrolide／TMP-SMX／SSRI',A:{tags:['warfarin']},B:{tags:['amiodarone','cipro','macrolide','tmpsmx','ssri']},
+ rec:'Avoid when possible; if used together, monitor INR closely',recZh:'盡可能避免；若需併用，密切監測 INR（macrolide 不含 azithromycin）',
+ why:'Increased bleeding risk.',whyZh:'出血風險增加。',qe:'Moderate 中',sr:'Strong 強'}
+];
+const CNS_TAGS=['aed','tca','ssri','snri','ap','bzd','zdrug','opioid','smr'];
+</script>
+<script>
+/* ================= helpers ================= */
+const TBL={1:'TABLE 1 · 避免使用',2:'TABLE 2 · 疾病相關',3:'TABLE 3 · 謹慎使用',4:'TABLE 4 · 藥物交互',5:'TABLE 5 · 腎功能'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.toLowerCase().normalize('NFKC').replace(/[\s\-_./()（）]/g,'');
+function drugLabel(d,withAlias=true){
+  let a=[...d.b,...d.zh].join('、');
+  return withAlias&&a?`${d.en}（${a}）`:d.en;
+}
+function hasTag(d,t){return d.t.includes(t)}
+function matchOne(d,m){
+  if(m.d&&m.d.includes(d.k)){if(m.not&&hasTag(d,m.not))return false;return true}
+  if(m.tag&&hasTag(d,m.tag)){if(m.not&&hasTag(d,m.not))return false;return true}
+  if(m.tags&&m.tags.some(t=>hasTag(d,t))){if(m.not&&hasTag(d,m.not))return false;return true}
+  return false;
+}
+function critMatches(c,d){return c.m.some(m=>matchOne(d,m))}
+function searchDrugs(q){
+  q=norm(q); if(q.length<2)return[];
+  return DRUGS.filter(d=>
+    norm(d.en).includes(q)||norm(d.k).includes(q)||
+    d.b.some(b=>norm(b).includes(q))||d.zh.some(z=>norm(z).includes(q))
+  ).slice(0,12);
+}
+const condLabel=k=>{const c=CONDS.find(x=>x.k===k);return c?`${c.zh} ${c.en}`:k};
+const condLabelMulti=c=>(Array.isArray(c.cond)?c.cond:[c.cond]).map(condLabel).join('／');
+const SRCB={ags:'2023 AGS Beers',tw:'PIM-Taiwan 2018'};
+const SRC={ags:true,tw:true};
+let lastPick=null;
+function toggleSrc(s){
+  SRC[s]=!SRC[s];
+  document.querySelectorAll('.src-'+s).forEach(b=>{
+    b.classList.toggle('on',SRC[s]);
+    b.textContent=(SRC[s]?'✓ ':'')+SRCB[s];
+  });
+  if(lastPick&&document.getElementById('panelQ').classList.contains('active'))pickDrug(lastPick);
+  if(document.getElementById('aResults').innerHTML.trim())runAssess();
+}
+
+/* ================= card renderer ================= */
+function card(c,extraBadge=''){
+  const s=c.src||'ags';
+  return `<div class="card lvl-${c.lvl}"><div class="spine"></div><div class="cbody">
+    <div class="badges"><span class="tbadge">${c.tlabel||TBL[c.tb]}</span>
+      ${c.cond?`<span class="condbadge">適用條件：${esc(condLabelMulti(c))}</span>`:''}${extraBadge}
+      <span style="font-size:.74rem;color:var(--ink-soft)">${esc(c.cat)}</span></div>
+    <div class="rec">${esc(c.rec)}</div>
+    <div class="rec-zh">${esc(c.recZh)}</div>
+    <div class="why">${esc(c.why)}</div>
+    <div class="why">${esc(c.whyZh)}</div>
+    ${c.alt?`<div class="why" style="color:var(--teal);font-weight:600;margin-top:5px">替代／建議 Alternatives：${esc(c.alt)}</div>`:''}
+    <div class="meta"><span class="srcb ${s}">${SRCB[s]}</span>${c.qe?`<span>證據品質 QE：<b>${esc(c.qe)}</b></span><span>建議強度 SR：<b>${esc(c.sr)}</b></span>`:''}</div>
+  </div></div>`;
+}
+function ddiCard(r,aD,bD){
+  return `<div class="card lvl-ddi"><div class="spine"></div><div class="cbody">
+    <div class="badges"><span class="tbadge">${TBL[4]}</span>
+      ${r.sex?`<span class="condbadge" style="background:var(--ddi-bg);color:var(--ddi)">限${r.sex==='F'?'女性':'男性'} ${r.sex}-only</span>`:''}
+      <span style="font-size:.74rem;color:var(--ink-soft)">${esc(r.name)}</span></div>
+    <div class="rec">${esc(aD)} ✕ ${esc(bD)}</div>
+    <div class="rec">${esc(r.rec)}</div>
+    <div class="rec-zh">${esc(r.recZh)}</div>
+    <div class="why">${esc(r.why)}　${esc(r.whyZh)}</div>
+    <div class="meta"><span class="srcb ags">${SRCB.ags}</span><span>QE：<b>${esc(r.qe)}</b></span><span>SR：<b>${esc(r.sr)}</b></span></div>
+  </div></div>`;
+}
+
+/* ================= QUICK LOOKUP ================= */
+function switchTab(t){
+  $('panelQ').classList.toggle('active',t==='q');
+  $('panelA').classList.toggle('active',t==='a');
+  $('tabQ').classList.toggle('active',t==='q');
+  $('tabA').classList.toggle('active',t==='a');
+}
+$('qInput').addEventListener('input',()=>{
+  const hits=searchDrugs($('qInput').value);
+  $('qSugg').innerHTML=hits.map(d=>
+    `<button class="chip" onclick="pickDrug('${d.k}')"><b>${esc(d.en)}</b>${d.b.length||d.zh.length?` <span style="color:var(--ink-soft)">${esc([...d.b,...d.zh].join('、'))}</span>`:''}</button>`
+  ).join('');
+});
+$('qInput').addEventListener('keydown',e=>{if(e.key==='Enter')doQuickSearch()});
+function doQuickSearch(){
+  const hits=searchDrugs($('qInput').value);
+  if(!hits.length){
+    $('qResults').innerHTML=`<div class="empty">查無符合「${esc($('qInput').value)}」的藥物。<br>請改用英文學名或台灣常見商品名；亦可能此藥不在 2023 Beers Criteria 名單中（不在名單≠安全，仍需臨床判斷）。</div>`;
+    if($('qExportBar'))$('qExportBar').style.display='none';lastQuick=null;
+    return;
+  }
+  if(hits.length===1){pickDrug(hits[0].k);return}
+  $('qResults').innerHTML=`<div class="empty">找到多個可能的藥物，請從上方建議中點選。</div>`;
+  if($('qExportBar'))$('qExportBar').style.display='none';lastQuick=null;
+}
+function pickDrug(k){
+  const d=DRUGS.find(x=>x.k===k);
+  lastPick=k; lastQuick=k;
+  if($('qExportBar'))$('qExportBar').style.display='flex';
+  $('qInput').value=d.en; $('qSugg').innerHTML='';
+  const crits=CRITERIA.filter(c=>SRC[c.src||'ags']&&critMatches(c,d));
+  const t1=crits.filter(c=>c.tb===1), t3=crits.filter(c=>c.tb===3),
+        t2=crits.filter(c=>c.tb===2), t5=crits.filter(c=>c.tb===5);
+  const ddis=SRC.ags?DDI.filter(r=>{
+    const inA=matchOne(d,r.A)||(r.samePool&&matchOne(d,r.B));
+    const inB=matchOne(d,r.B)||(r.samePool&&matchOne(d,r.A));
+    return inA||inB;
+  }):[];
+  let html=`<div class="drughead"><span class="gname">${esc(d.en)}</span>
+    ${d.b.length||d.zh.length?`<span class="alias">${esc([...d.b,...d.zh].join('、'))}</span>`:''}</div>`;
+  if(!crits.length&&!ddis.length){
+    html+=`<div class="notfound">✓ 此藥未列入 2023 AGS Beers Criteria 各表。<br>This drug is not listed in the 2023 criteria tables. 不代表絕對安全，仍應依臨床情境評估（含腎功能、交互作用與抗膽鹼負荷）。</div>`;
+  }else{
+    if(t1.length)html+=`<div class="section-label">一般建議 General</div>`+t1.map(c=>card(c)).join('');
+    if(t3.length)html+=`<div class="section-label">謹慎使用 Use with caution</div>`+t3.map(c=>card(c)).join('');
+    if(t2.length)html+=`<div class="section-label">特定疾病／症候群時避免 Disease-specific</div>`+t2.map(c=>card(c)).join('');
+    if(t5.length)html+=`<div class="section-label">腎功能不全時 Kidney function</div>`+t5.map(c=>card(c)).join('');
+    if(ddis.length)html+=`<div class="section-label">應避免之併用藥物 Interactions to avoid</div>`+
+      ddis.map(r=>{
+        const self=matchOne(d,r.A)?'A':'B';
+        const otherSide=self==='A'?r.B:r.A;
+        const otherLabel=otherSide.d?otherSide.d.map(k2=>{const dd=DRUGS.find(x=>x.k===k2);return dd?dd.en:k2}).join('／'):
+          (otherSide.tags||[]).map(tagName).join('／');
+        return ddiCard(r,d.en,otherLabel);
+      }).join('');
+    if(SRC.ags&&(hasTag(d,'cns')||CNS_TAGS.some(t=>hasTag(d,t)))){
+      html+=`<div class="card lvl-ddi"><div class="spine"></div><div class="cbody">
+        <div class="badges"><span class="tbadge">${TBL[4]}</span><span style="font-size:.74rem;color:var(--ink-soft)">CNS 多重用藥規則</span></div>
+        <div class="rec">Counts toward the “≥3 CNS-active drugs” rule</div>
+        <div class="rec-zh">此藥計入「同時使用 ≥3 種中樞神經作用藥物」規則：避免併用 ≥3 種（抗癲癇藥含 gabapentinoid、TCA/SSRI/SNRI、抗精神病藥、BZD、Z-drug、鴉片類、骨骼肌鬆弛劑），以降低跌倒與骨折風險。</div>
+        <div class="meta"><span>QE：<b>High 高</b></span><span>SR：<b>Strong 強</b></span></div></div></div>`;
+    }
+  }
+  $('qResults').innerHTML=html;
+}
+function tagName(t){
+  const M={ras:'ACEI/ARB/ARNI/Aliskiren',ksparing:'保鉀利尿劑',opioid:'鴉片類 Opioids',bzd:'Benzodiazepines',
+    gabapentinoid:'Gabapentin/Pregabalin',ach:'其他抗膽鹼藥 Anticholinergics',loop:'環利尿劑 Loop diuretics',
+    alpha1:'α-1 阻斷劑',phenytoin:'Phenytoin',tmpsmx:'TMP-SMX',theophylline:'Theophylline',cimetidine:'Cimetidine',
+    cipro:'Ciprofloxacin',warfarin:'Warfarin',amiodarone:'Amiodarone',macrolide:'Macrolides(非azithromycin)',ssri:'SSRIs'};
+  return M[t]||t;
+}
+
+/* ================= ASSESSMENT ================= */
+let sex='F', list=[];
+function setSex(s){sex=s;$('sexF').classList.toggle('on',s==='F');$('sexM').classList.toggle('on',s==='M');renderConds()}
+function renderConds(){
+  $('condBox').innerHTML=CONDS.map(c=>{
+    const dis=c.sex&&c.sex!==sex;
+    return `<label style="${dis?'opacity:.4':''}"><input type="checkbox" id="cond_${c.k}" ${dis?'disabled':''}>
+      <span>${esc(c.zh)}<br><span class="sx">${esc(c.en)}</span></span></label>`;
+  }).join('');
+}
+renderConds();
+function calcCG(){
+  const age=+$('pAge').value,wt=+$('pWt').value,scr=+$('pScr').value;
+  if(!age||!wt||!scr){$('cgOut').style.display='block';$('cgOut').innerHTML='請先填寫年齡、體重與肌酸酐。';return}
+  let crcl=(140-age)*wt/(72*scr); if(sex==='F')crcl*=0.85;
+  crcl=Math.round(crcl*10)/10;
+  $('pCrcl').value=Math.round(crcl);
+  $('cgOut').style.display='block';
+  $('cgOut').innerHTML=`Cockcroft–Gault 估算：<b>CrCl ≈ ${crcl} mL/min</b>（已自動帶入上方欄位，可手動修改）`;
+}
+$('aInput').addEventListener('input',()=>{
+  const hits=searchDrugs($('aInput').value);
+  const dd=$('aDrop');
+  if(!hits.length){dd.style.display='none';return}
+  dd.style.display='block';
+  dd.innerHTML=hits.map(d=>`<div onclick="addDrug('${d.k}')">${esc(d.en)}${d.b.length||d.zh.length?` <span class="sub">${esc([...d.b,...d.zh].join('、'))}</span>`:''}</div>`).join('');
+});
+$('aInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addDrugFromInput()}});
+document.addEventListener('click',e=>{if(!e.target.closest('.druginput'))$('aDrop').style.display='none'});
+function addDrugFromInput(){
+  const hits=searchDrugs($('aInput').value);
+  if(hits.length){addDrug(hits[0].k)}
+  else if($('aInput').value.trim()){
+    list.push({k:null,raw:$('aInput').value.trim()});
+    $('aInput').value='';$('aDrop').style.display='none';renderList();
+  }
+}
+function addDrug(k){
+  if(!list.some(x=>x.k===k))list.push({k});
+  $('aInput').value='';$('aDrop').style.display='none';renderList();
+}
+function rmDrug(i){list.splice(i,1);renderList()}
+function renderList(){
+  $('aList').innerHTML=list.map((x,i)=>{
+    const label=x.k?DRUGS.find(d=>d.k===x.k).en:x.raw+'（未收錄）';
+    return `<span class="dtag">${esc(label)}<button onclick="rmDrug(${i})">✕</button></span>`;
+  }).join('');
+}
+function resetAssess(){
+  list=[];renderList();$('aResults').innerHTML='';
+  ['pAge','pCrcl','pWt','pScr'].forEach(id=>$(id).value='');
+  $('cgOut').style.display='none';
+  CONDS.forEach(c=>{const el=$('cond_'+c.k);if(el)el.checked=false});
+  lastAssess=null;$('aExportBar').style.display='none';
+}
+function runAssess(){
+  const age=+$('pAge').value||null, crcl=+$('pCrcl').value||null;
+  const conds=CONDS.filter(c=>{const el=$('cond_'+c.k);return el&&el.checked}).map(c=>c.k);
+  const drugs=list.filter(x=>x.k).map(x=>DRUGS.find(d=>d.k===x.k));
+  const unknown=list.filter(x=>!x.k);
+  if(!drugs.length&&!unknown.length){$('aResults').innerHTML=`<div class="empty">請先加入至少一項用藥。</div>`;return}
+
+  let counts={avoid:0,disease:0,caution:0,renal:0,ddi:0};
+  let perDrug=drugs.map(d=>{
+    const hits=[];
+    CRITERIA.forEach(c=>{
+      if(!SRC[c.src||'ags'])return;
+      if(!critMatches(c,d))return;
+      if(c.tb===2){
+        const ks=Array.isArray(c.cond)?c.cond:[c.cond];
+        const ok=ks.some(k=>{
+          const cc=CONDS.find(x=>x.k===k);
+          return conds.includes(k)&&(!cc.sex||cc.sex===sex);
+        });
+        if(!ok)return;
+      }
+      if(c.tb===5){
+        if(crcl==null){hits.push({c,note:'未輸入 CrCl — 請確認腎功能後對照此建議'});counts.renal++;return}
+        const below=c.thrEq?crcl<=c.thr:crcl<c.thr;
+        if(!below)return;
+      }
+      hits.push({c});
+      counts[c.lvl]++;
+    });
+    return {d,hits};
+  });
+
+  /* DDI pairwise (AGS Table 4 only) */
+  let ddiHtml='';
+  let ddiRecords=[];
+  if(SRC.ags)DDI.forEach(r=>{
+    if(r.sex&&r.sex!==sex)return;
+    for(let i=0;i<drugs.length;i++)for(let j=0;j<drugs.length;j++){
+      if(i===j)continue;
+      if(r.samePool){ if(j<=i)continue;
+        if(matchOne(drugs[i],r.A)&&matchOne(drugs[j],r.B)){
+          if(r.condNote==='ckd3'&&!conds.includes('ckd3'))continue;
+          ddiHtml+=ddiCard(r,drugs[i].en,drugs[j].en);counts.ddi++;
+          ddiRecords.push({r,a:drugs[i].en,b:drugs[j].en});}
+      }else{
+        if(j<i&&matchOne(drugs[j],r.A)&&matchOne(drugs[i],r.B))continue; // dedupe symmetric
+        if(matchOne(drugs[i],r.A)&&matchOne(drugs[j],r.B)){
+          ddiHtml+=ddiCard(r,drugs[i].en,drugs[j].en);counts.ddi++;
+          ddiRecords.push({r,a:drugs[i].en,b:drugs[j].en});}
+      }
+    }
+  });
+  /* anticholinergic burden & CNS≥3 */
+  const achDrugs=drugs.filter(d=>hasTag(d,'ach'));
+  const cnsDrugs=drugs.filter(d=>CNS_TAGS.some(t=>hasTag(d,t)));
+  if(SRC.ags&&cnsDrugs.length>=3){
+    counts.ddi++;
+    ddiHtml+=`<div class="card lvl-ddi"><div class="spine"></div><div class="cbody">
+      <div class="badges"><span class="tbadge">${TBL[4]}</span><span style="font-size:.74rem;color:var(--ink-soft)">CNS 多重用藥</span></div>
+      <div class="rec">≥3 concurrent CNS-active drugs detected（${cnsDrugs.length} 種）</div>
+      <div class="rec-zh">偵測到 ${cnsDrugs.length} 種中樞神經作用藥物併用：${esc(cnsDrugs.map(d=>d.en).join('、'))}</div>
+      <div class="why">Avoid ≥3 concurrent CNS-active drugs; minimize the number — increased risk of falls and fractures. 避免同時使用 ≥3 種並儘量減少品項，以降低跌倒與骨折風險。</div>
+      <div class="meta"><span>QE：<b>High 高</b></span><span>SR：<b>Strong 強</b></span></div></div></div>`;
+  }
+
+  /* render */
+  let html='';
+  if(age&&age<65)html+=`<div class="notfound" style="background:var(--caution-bg);border-color:#e7dcae;color:var(--caution)">⚠ 病人 ${age} 歲：Beers Criteria 適用對象為 ≥65 歲，以下結果僅供參考。</div>`;
+  html+=`<div class="summary">
+    <span class="sumchip s-avoid"><span class="n">${counts.avoid}</span>避免使用</span>
+    <span class="sumchip s-disease"><span class="n">${counts.disease}</span>疾病相關</span>
+    <span class="sumchip s-caution"><span class="n">${counts.caution}</span>謹慎使用</span>
+    <span class="sumchip s-renal"><span class="n">${counts.renal}</span>腎功能</span>
+    <span class="sumchip s-ddi"><span class="n">${counts.ddi}</span>交互作用</span>
+  </div>`;
+  if(achDrugs.length>=2)html+=`<div class="notfound" style="background:var(--ddi-bg);border-color:#d8cdf0;color:var(--ddi)">抗膽鹼負荷提醒：清單中有 ${achDrugs.length} 種強抗膽鹼藥（${esc(achDrugs.map(d=>d.en).join('、'))}），請於用藥整合時優先檢視。</div>`;
+  perDrug.forEach(({d,hits})=>{
+    html+=`<div class="drughead"><span class="gname">${esc(d.en)}</span>
+      ${d.b.length||d.zh.length?`<span class="alias">${esc([...d.b,...d.zh].join('、'))}</span>`:''}</div>`;
+    if(!hits.length){
+      html+=`<div class="notfound">✓ 依目前輸入之條件，此藥無 Beers Criteria 警示。No criteria triggered for the entered patient profile.</div>`;
+    }else{
+      html+=hits.map(h=>card(h.c,h.note?`<span class="condbadge" style="background:var(--renal-bg);color:var(--renal)">${esc(h.note)}</span>`:'')).join('');
+    }
+  });
+  if(ddiHtml)html+=`<div class="section-label">藥物交互作用 Drug–drug interactions</div>`+ddiHtml;
+  unknown.forEach(u=>{
+    html+=`<div class="drughead"><span class="gname">${esc(u.raw)}</span></div>
+      <div class="empty" style="margin-top:4px;padding:14px">未收錄於本工具藥物清單，無法自動比對；請人工確認是否屬 Beers Criteria 所列類別（本工具收錄品項以口袋版為準，非完整列表）。</div>`;
+  });
+  $('aResults').innerHTML=html;
+  lastAssess={age,crcl,sex,conds,perDrug,unknown,counts,achDrugs,cnsDrugs,
+              ddiList:ddiRecords,cnsRule:(SRC.ags&&cnsDrugs.length>=3)?cnsDrugs:null};
+  $('aExportBar').style.display='flex';
+  window.scrollTo({top:$('aResults').offsetTop-80,behavior:'smooth'});
+}
+
+/* ============ 病歷格式文字輸出 ============ */
+let lastAssess=null, lastQuick=null;
+
+function pad2(n){return String(n).padStart(2,'0')}
+function stamp(){const d=new Date();return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`}
+function stampFile(){const d=new Date();return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`}
+function srcTag(c){return (c.src||'ags')==='tw'?'PIM-Taiwan 2018':'AGS Beers 2023'}
+const LVLNAME={avoid:'避免使用',disease:'疾病相關避免',caution:'謹慎使用',renal:'腎功能調整'};
+
+function activeSrcLabel(){
+  const a=[];if(SRC.ags)a.push('AGS Beers 2023');if(SRC.tw)a.push('PIM-Taiwan 2018');
+  return a.join(' + ')||'（未選擇來源）';
+}
+
+function buildAssessText(){
+  if(!lastAssess){return null}
+  const a=lastAssess;const L=[];
+  L.push('=================================================');
+  L.push(' 高齡用藥適當性評估（PIM 篩檢）');
+  L.push(' Potentially Inappropriate Medication Review');
+  L.push('=================================================');
+  // patient line
+  const pcs=[];
+  pcs.push(`年齡 ${a.age?a.age+' 歲':'未填'}`);
+  pcs.push(`性別 ${a.sex==='F'?'女':'男'}`);
+  pcs.push(`CrCl ${a.crcl!=null?a.crcl+' mL/min':'未填'}`);
+  L.push('【病人資料】'+pcs.join('　'));
+  // conditions
+  if(a.conds.length){
+    const cn=a.conds.map(k=>{const c=CONDS.find(x=>x.k===k);return c?c.zh:k});
+    L.push('【共病／症候群】'+cn.join('、'));
+  }else{L.push('【共病／症候群】未勾選')}
+  // medication list
+  const meds=a.perDrug.map(p=>p.d.en).concat(a.unknown.map(u=>u.raw+'(未收錄)'));
+  L.push('【用藥清單】'+(meds.length?meds.join('、'):'無'));
+  L.push('【篩檢準則】'+activeSrcLabel());
+  L.push('-------------------------------------------------');
+  // summary
+  const c=a.counts;
+  L.push(`【篩檢結果摘要】避免使用 ${c.avoid}　疾病相關 ${c.disease}　謹慎使用 ${c.caution}　腎功能 ${c.renal}　交互作用 ${c.ddi}`);
+  const flagged=a.perDrug.filter(p=>p.hits.length);
+  if(!flagged.length&&!a.ddiList.length&&!a.cnsRule&&a.achDrugs.length<2){
+    L.push('  → 依目前輸入條件，未偵測到 PIM 警示。');
+  }
+  L.push('');
+  // per-drug detail
+  let idx=0;
+  flagged.forEach(p=>{
+    idx++;
+    const alias=[...p.d.b,...p.d.zh];
+    L.push(`${idx}. ${p.d.en}${alias.length?'（'+alias.join('、')+'）':''}`);
+    p.hits.forEach(h=>{
+      const c2=h.c;
+      const sect=c2.tb===2?'疾病相關避免':(c2.tb===5?'腎功能調整':(LVLNAME[c2.lvl]||''));
+      let head=`   ▪ [${srcTag(c2)}｜${sect}]`;
+      if(c2.cond){head+=` 適用：${condLabelZh(c2)}`}
+      L.push(head);
+      L.push(`     建議：${c2.recZh}`);
+      L.push(`     理由：${c2.whyZh}`);
+      if(c2.alt)L.push(`     替代／建議：${stripEn(c2.alt)}`);
+      if(h.note)L.push(`     註：${h.note}`);
+    });
+    L.push('');
+  });
+  // unknown
+  if(a.unknown.length){
+    a.unknown.forEach(u=>{L.push(`※ ${u.raw}：未收錄於本工具，請人工確認。`)});
+    L.push('');
+  }
+  // DDI
+  if(a.ddiList.length){
+    L.push('【藥物交互作用 — 建議避免併用】');
+    a.ddiList.forEach(x=>{
+      L.push(`   ▪ ${x.a} ✕ ${x.b}（${x.r.name}）`);
+      L.push(`     ${x.r.recZh}　${x.r.whyZh}`);
+    });
+    L.push('');
+  }
+  // CNS rule
+  if(a.cnsRule){
+    L.push('【中樞神經多重用藥】');
+    L.push(`   偵測到 ${a.cnsRule.length} 種 CNS 作用藥物併用：${a.cnsRule.map(d=>d.en).join('、')}`);
+    L.push('   建議：避免同時使用 ≥3 種，儘量減少品項以降低跌倒與骨折風險。');
+    L.push('');
+  }
+  // anticholinergic burden
+  if(a.achDrugs.length>=2){
+    L.push('【抗膽鹼負荷】');
+    L.push(`   ${a.achDrugs.length} 種強抗膽鹼藥：${a.achDrugs.map(d=>d.en).join('、')}　建議於用藥整合時優先檢視。`);
+    L.push('');
+  }
+  L.push('-------------------------------------------------');
+  L.push(`評估時間：${stamp()}`);
+  L.push('依據：2023 AGS Beers Criteria® 與 PIM-Taiwan 2018（Chang CB et al. Ther Adv Chronic Dis 2019）。');
+  L.push('本評估僅供臨床參考，不取代臨床判斷與病人個別化考量。');
+  return L.join('\n');
+}
+
+function condLabelZh(c){
+  return (Array.isArray(c.cond)?c.cond:[c.cond]).map(k=>{const x=CONDS.find(y=>y.k===k);return x?x.zh:k}).join('／');
+}
+/* 移除替代建議欄位中的英文重複句，病歷以中文為主 */
+function stripEn(s){
+  return s.replace(/[A-Za-z][A-Za-z0-9 ,.;:%>\/\-\(\)]+\.?$/,'').trim()||s;
+}
+
+function buildQuickText(){
+  if(!lastQuick){return null}
+  const d=DRUGS.find(x=>x.k===lastQuick);
+  const crits=CRITERIA.filter(c=>SRC[c.src||'ags']&&critMatches(c,d));
+  const L=[];
+  const alias=[...d.b,...d.zh];
+  L.push('=================================================');
+  L.push(` PIM 查詢：${d.en}${alias.length?'（'+alias.join('、')+'）':''}`);
+  L.push('=================================================');
+  L.push('【篩檢準則】'+activeSrcLabel());
+  if(!crits.length){
+    L.push('→ 此藥未列入所選準則之 PIM 名單（不代表絕對安全，仍需臨床判斷）。');
+  }else{
+    let idx=0;
+    crits.forEach(c=>{
+      idx++;
+      const sect=c.tb===2?'疾病相關避免':(c.tb===5?'腎功能調整':(LVLNAME[c.lvl]||''));
+      let head=`${idx}. [${srcTag(c)}｜${sect}]`;
+      if(c.cond)head+=` 適用：${condLabelZh(c)}`;
+      L.push(head);
+      L.push(`   建議：${c.recZh}`);
+      L.push(`   理由：${c.whyZh}`);
+      if(c.alt)L.push(`   替代／建議：${stripEn(c.alt)}`);
+    });
+  }
+  if(SRC.ags){
+    const ddis=DDI.filter(r=>matchOne(d,r.A)||matchOne(d,r.B));
+    if(ddis.length){
+      L.push('【應避免併用之藥物】');
+      ddis.forEach(r=>{
+        const o=matchOne(d,r.A)?r.B:r.A;
+        const ol=o.d?o.d.map(k=>{const dd=DRUGS.find(x=>x.k===k);return dd?dd.en:k}).join('／'):(o.tags||[]).map(tagName).join('／');
+        L.push(`   ▪ 與 ${ol} 併用：${r.recZh}（${r.whyZh}）`);
+      });
+    }
+    if(CNS_TAGS.some(t=>hasTag(d,t)))L.push('※ 本品計入「同時使用 ≥3 種中樞神經作用藥物應避免」規則（跌倒、骨折風險）。');
+  }
+  L.push('-------------------------------------------------');
+  L.push(`查詢時間：${stamp()}`);
+  L.push('依據：2023 AGS Beers Criteria® 與 PIM-Taiwan 2018。本資訊僅供臨床參考。');
+  return L.join('\n');
+}
+
+function downloadTxt(text,fnamebase){
+  if(!text){alert('尚無可匯出的內容，請先執行查詢或評估。');return}
+  const blob=new Blob(['\ufeff'+text],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${fnamebase}_${stampFile()}.txt`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function exportAssessTxt(){downloadTxt(buildAssessText(),'PIM評估')}
+function exportQuickTxt(){downloadTxt(buildQuickText(),'PIM查詢')}
+
+function toast(msg){
+  const t=$('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),1800);
+}
+async function copyTxt(text){
+  if(!text){alert('尚無可複製的內容，請先執行查詢或評估。');return}
+  try{await navigator.clipboard.writeText(text);}
+  catch(e){
+    const ta=document.createElement('textarea');ta.value=text;
+    ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+  }
+  toast('已複製，可直接貼入病歷');
+}
+function dlPreview(){
+  const t=$('previewText').value;
+  if(!t)return;
+  const base=t.includes('PIM 查詢')?'PIM查詢':'PIM評估';
+  downloadTxt(t,base);
+}
+
+/* 預覽 modal */
+function showPreview(text){
+  if(!text){alert('尚無可匯出的內容，請先執行查詢或評估。');return}
+  $('previewText').value=text;
+  $('previewModal').style.display='flex';
+}
+function closePreview(){$('previewModal').style.display='none'}
+function copyPreview(){
+  const t=$('previewText');t.select();
+  navigator.clipboard?.writeText(t.value).then(()=>{
+    const b=$('copyBtn');const o=b.textContent;b.textContent='✓ 已複製';setTimeout(()=>b.textContent=o,1500);
+  }).catch(()=>{document.execCommand('copy')});
+}
+</script>
+</body>
+</html>
